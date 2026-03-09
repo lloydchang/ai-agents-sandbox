@@ -34,7 +34,7 @@
       return true; // Prevent error
     }
     if (originalOnError) {
-      return originalOnError.call(this as Window, message, source, lineno, colno, error);
+      return (originalOnError as any).call(this, message, source, lineno, colno, error);
     }
     return false;
   };
