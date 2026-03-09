@@ -150,6 +150,7 @@ This sandbox is designed for experimentation and can be extended with:
 
 ## License
 
+```
 repo-root/                      <- AGPLv3 (overall repo license now)
 ├── LICENSE                     <- AGPLv3
 ├── frontend/                    <- Backstage code
@@ -158,4 +159,5 @@ repo-root/                      <- AGPLv3 (overall repo license now)
 ├── backend/                     <- Temporal code
 │   ├── LICENSE                 <- MIT
 │   └── package.json
+```
 
