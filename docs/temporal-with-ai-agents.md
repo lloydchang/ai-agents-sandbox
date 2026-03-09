@@ -1,3 +1,5 @@
+// File: temporal-with-ai-agents.md
+
 can temporal work with ai agents in azure microsoft foundry? what would that look like?
 
 Yes. You can use Temporal (the workflow orchestration platform) together with AI agents deployed in Azure Microsoft Foundry. The integration isn’t a built‑in connector — you build the orchestration yourself — but Temporal is well suited for controlling, managing, and coordinating agents, model calls, and external services. Here’s what that setup typically looks like and why it works:
