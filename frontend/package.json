@@ -39,7 +39,7 @@
     "@backstage/cli": "^0.29.0",
     "@backstage/test-utils": "^1.7.5",
     "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^14.0.0",
+    "@testing-library/react": "^16.0.0",
     "@testing-library/user-event": "^13.5.0",
     "@types/node": "^20.5.0",
     "@types/react": "^18.2.0",
