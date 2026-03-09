@@ -21,7 +21,7 @@ export const TemporalIntegrationPage = () => {
   const [error, setError] = useState<Error>();
   const [workflows, setWorkflows] = useState<WorkflowStatus[]>([]);
   const config = useApi(configApiRef);
-  const backendUrl = config.getString('temporal.backendUrl');
+  const backendUrl = config.getOptionalString('temporal.backendUrl') || 'http://localhost:8081';
 
   const startWorkflow = async () => {
     setLoading(true);
