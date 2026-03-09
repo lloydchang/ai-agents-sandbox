@@ -13,7 +13,10 @@ const app = createApp({
 });
 
 const App = app.createRoot(
-  <StylesProvider generateClassName={createGenerateClassName()}>
+  <StylesProvider 
+    generateClassName={createGenerateClassName()}
+    injectFirst={true}
+  >
     <BrowserRouter>
       <FlatRoutes>
         <Route path="/" element={<div><h1>Welcome to Backstage + Temporal Sandbox</h1><p>Navigate to <a href="/temporal">/temporal</a> for workflow management</p><p>Navigate to <a href="/catalog">/catalog</a> for software catalog</p></div>} />
