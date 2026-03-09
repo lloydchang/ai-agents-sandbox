@@ -155,7 +155,5 @@ repo-root/                      <- AGPLv3 (overall repo)
 ├── LICENSE                     <- AGPLv3
 ├── frontend/                   <- Backstage code
 │   ├── LICENSE                 <- Apache 2.0
-├── backend/                    <- Temporal code
-│   ├── LICENSE                 <- MIT
 ```
 
