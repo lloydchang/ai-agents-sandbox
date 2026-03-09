@@ -1,11 +1,11 @@
 import './index.css';
 
-import ReactDOM from 'react-dom/client';
+import ReactDOM from 'react-dom';
 import App from './app';
 
 const rootElement = document.getElementById('root') as HTMLElement;
-const root = ReactDOM.createRoot(rootElement);
 
-root.render(
+ReactDOM.render(
   <App />,
+  rootElement,
 );
