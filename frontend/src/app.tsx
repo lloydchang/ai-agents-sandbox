@@ -4,13 +4,12 @@ import { Route, BrowserRouter } from 'react-router-dom';
 import { TemporalIntegrationPage } from './plugins/temporal-integration/index';
 
 // Import catalog plugin
-import { CatalogEntityPage, CatalogIndexPage } from '@backstage/plugin-catalog';
+import { catalogPlugin, CatalogEntityPage, CatalogIndexPage } from '@backstage/plugin-catalog';
 
 const app = createApp({
   apis: [],
   plugins: [
-    // Add catalog plugin using proper import
-    '@backstage/plugin-catalog',
+    catalogPlugin,
   ],
 });
 
