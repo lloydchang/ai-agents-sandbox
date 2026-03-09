@@ -1,14 +1,14 @@
+import './index.css';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import app from './App';
 
 const rootElement = document.getElementById('root') as HTMLElement;
 const root = ReactDOM.createRoot(rootElement);
 
 root.render(
   <React.StrictMode>
-    <div>
-      <h1>Backstage + Temporal Sandbox</h1>
-      <p>Loading...</p>
-    </div>
+    {app}
   </React.StrictMode>,
 );
