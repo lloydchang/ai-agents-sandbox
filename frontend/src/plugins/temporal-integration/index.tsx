@@ -1,0 +1,152 @@
+import React, { useState } from 'react';
+import {
+  Content,
+  Header,
+  Page,
+  Progress,
+  ResponseErrorPanel,
+} from '@backstage/core-components';
+import { Button, Grid, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+
+interface WorkflowStatus {
+  id: string;
+  status: string;
+  createdAt: string;
+}
+
+export const TemporalIntegrationPage = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error>();
+  const [workflows, setWorkflows] = useState<WorkflowStatus[]>([]);
+
+  const startWorkflow = async () => {
+    setLoading(true);
+    setError(undefined);
+    
+    try {
+      const response = await fetch('http://localhost:8081/workflow/start', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to start workflow: ${response.statusText}`);
+      }
+      
+      const workflowId = await response.text();
+      const newWorkflow: WorkflowStatus = {
+        id: workflowId,
+        status: 'RUNNING',
+        createdAt: new Date().toISOString(),
+      };
+      
+      setWorkflows(prev => [newWorkflow, ...prev]);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const checkWorkflowStatus = async (workflowId: string) => {
+    try {
+      const response = await fetch(`http://localhost:8081/workflow/status?id=${workflowId}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to get workflow status: ${response.statusText}`);
+      }
+      
+      const status = await response.text();
+      
+      setWorkflows(prev => 
+        prev.map(w => 
+          w.id === workflowId ? { ...w, status } : w
+        )
+      );
+    } catch (err) {
+      setError(err as Error);
+    }
+  };
+
+  if (error) {
+    return <ResponseErrorPanel error={error} />;
+  }
+
+  return (
+    <Page themeId="tool">
+      <Header title="Temporal Integration" />
+      <Content>
+        <Grid container spacing={3} direction="column">
+          <Grid item>
+            <Paper style={{ padding: 16 }}>
+              <Typography variant="h6" gutterBottom>
+                Workflow Management
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={startWorkflow}
+                disabled={loading}
+                style={{ marginRight: 16 }}
+              >
+                {loading ? <Progress /> : 'Start HelloBackstage Workflow'}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => workflows.forEach(w => checkWorkflowStatus(w.id))}
+              >
+                Refresh All Status
+              </Button>
+            </Paper>
+          </Grid>
+          
+          <Grid item>
+            <Paper style={{ padding: 16 }}>
+              <Typography variant="h6" gutterBottom>
+                Workflow Status
+              </Typography>
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Workflow ID</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Created At</TableCell>
+                      <TableCell>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {workflows.map((workflow) => (
+                      <TableRow key={workflow.id}>
+                        <TableCell>{workflow.id}</TableCell>
+                        <TableCell>{workflow.status}</TableCell>
+                        <TableCell>{new Date(workflow.createdAt).toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Button
+                            size="small"
+                            onClick={() => checkWorkflowStatus(workflow.id)}
+                          >
+                            Check Status
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {workflows.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} align="center">
+                          No workflows started yet. Click "Start HelloBackstage Workflow" to begin.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Content>
+    </Page>
+  );
+};
