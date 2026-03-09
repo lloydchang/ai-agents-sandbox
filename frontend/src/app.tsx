@@ -1,7 +1,6 @@
 import { createApp } from '@backstage/app-defaults';
 import { FlatRoutes } from '@backstage/core-app-api';
 import { Route, BrowserRouter } from 'react-router-dom';
-import './plugins/temporal-integration/plugin';
 import { TemporalIntegrationPage } from './plugins/temporal-integration/index';
 
 const app = createApp({

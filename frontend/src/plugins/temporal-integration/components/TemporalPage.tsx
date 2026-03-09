@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Button, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
-import { useApi } from '@backstage/core-plugin-api';
-import { configApiRef } from '@backstage/core-plugin-api';
 
 interface WorkflowStatus {
   id: string;
@@ -13,8 +11,7 @@ export const TemporalPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>();
   const [workflows, setWorkflows] = useState<WorkflowStatus[]>([]);
-  const config = useApi(configApiRef);
-  const backendUrl = config.getOptionalString('temporal.backendUrl') || 'http://localhost:8081';
+  const backendUrl = 'http://localhost:8081';
 
   const startWorkflow = async () => {
     setLoading(true);
