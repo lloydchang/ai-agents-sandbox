@@ -66,9 +66,10 @@ type ComplianceRequest struct {
 }
 
 type ComplianceResult struct {
-	Report      ComplianceReport `json:"report"`
-	Approved    bool             `json:"approved"`
-	CompletedAt time.Time        `json:"completedAt"`
+	Report      ComplianceReport       `json:"report"`
+	Approved    bool                   `json:"approved"`
+	CompletedAt time.Time              `json:"completedAt"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type HumanTask struct {
@@ -90,10 +91,11 @@ type HumanTaskStatus struct {
 }
 
 type HumanTaskResult struct {
-	TaskID      string    `json:"taskId"`
-	Approved    bool      `json:"approved"`
-	Decision    string    `json:"decision"`
-	CompletedAt time.Time `json:"completedAt"`
+	TaskID      string                 `json:"taskId"`
+	Approved    bool                   `json:"approved"`
+	Decision    string                 `json:"decision"`
+	CompletedAt time.Time              `json:"completedAt"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type CollaborationRequest struct {

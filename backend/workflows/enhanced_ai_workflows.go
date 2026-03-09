@@ -6,6 +6,7 @@ import (
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
+	"github.com/lloydchang/backstage-temporal/backend/activities"
 	"github.com/lloydchang/backstage-temporal/backend/types"
 )
 
@@ -52,7 +53,7 @@ func AIAgentOrchestrationWorkflowV2(ctx workflow.Context, request types.Complian
 	metrics.Stages["discovery"] = &StageMetrics{StartTime: workflow.Now(ctx)}
 
 	var infraResult types.InfrastructureResult
-	err := workflow.ExecuteActivity(ctx, activities.DiscoverInfrastructureActivityV2, request.TargetResource).Get(ctx, &infraResult)
+	err := workflow.ExecuteActivity(ctx, activities.DiscoverInfrastructureActivity, request.TargetResource).Get(ctx, &infraResult)
 	if err != nil {
 		metrics.Stages["discovery"].EndTime = workflow.Now(ctx)
 		metrics.Stages["discovery"].Status = "failed"
@@ -89,7 +90,7 @@ func AIAgentOrchestrationWorkflowV2(ctx workflow.Context, request types.Complian
 	metrics.Stages["aggregation"] = &StageMetrics{StartTime: workflow.Now(ctx)}
 
 	var aggregatedResult types.AggregatedResult
-	err = workflow.ExecuteActivity(ctx, activities.AggregateAgentResultsActivityV2, agentResults, infraResult).Get(ctx, &aggregatedResult)
+	err = workflow.ExecuteActivity(ctx, activities.AggregateAgentResultsActivity, agentResults).Get(ctx, &aggregatedResult)
 	if err != nil {
 		metrics.Stages["aggregation"].EndTime = workflow.Now(ctx)
 		metrics.Stages["aggregation"].Status = "failed"
@@ -117,7 +118,7 @@ func AIAgentOrchestrationWorkflowV2(ctx workflow.Context, request types.Complian
 			},
 		})
 
-		err = workflow.ExecuteActivity(reviewCtx, activities.HumanReviewActivityV2, aggregatedResult, reviewPriority).Get(ctx, &reviewResult)
+		err = workflow.ExecuteActivity(reviewCtx, activities.HumanReviewActivity, aggregatedResult).Get(ctx, &reviewResult)
 		if err != nil {
 			// Handle human review timeout or failure
 			logger.Warn("Human review failed or timed out", "error", err)
@@ -137,7 +138,7 @@ func AIAgentOrchestrationWorkflowV2(ctx workflow.Context, request types.Complian
 	metrics.Stages["reporting"] = &StageMetrics{StartTime: workflow.Now(ctx)}
 
 	var finalReport types.ComplianceReport
-	err = workflow.ExecuteActivity(ctx, activities.GenerateComplianceReportActivityV2, aggregatedResult, agentResults, infraResult).Get(ctx, &finalReport)
+	err = workflow.ExecuteActivity(ctx, activities.GenerateComplianceReportActivity, aggregatedResult).Get(ctx, &finalReport)
 	if err != nil {
 		metrics.Stages["reporting"].EndTime = workflow.Now(ctx)
 		metrics.Stages["reporting"].Status = "failed"
@@ -153,13 +154,6 @@ func AIAgentOrchestrationWorkflowV2(ctx workflow.Context, request types.Complian
 		Report:      finalReport,
 		Approved:    aggregatedResult.HumanReviewResult == nil || aggregatedResult.HumanReviewResult.Approved,
 		CompletedAt: workflow.Now(ctx),
-		Metadata: map[string]interface{}{
-			"workflowVersion":    "v2.0",
-			"totalAgents":        len(agentResults),
-			"humanReviewRequired": aggregatedResult.RequiresHumanReview,
-			"circuitBreakerState": circuitBreaker.GetState(),
-			"metrics":           metrics,
-		},
 	}
 
 	logger.Info("Enhanced AI Orchestration Workflow V2 completed successfully", "result", result)
@@ -238,7 +232,7 @@ func executeAgentWithConfig(ctx workflow.Context, config AgentConfig, infra type
 			InitialInterval:    time.Second * 10,
 			BackoffCoefficient: 2.0,
 			MaximumInterval:    time.Minute,
-			MaximumAttempts:    config.MaxRetries,
+			MaximumAttempts:    int32(config.MaxRetries),
 		},
 		HeartbeatTimeout: time.Minute,
 	}
@@ -247,11 +241,11 @@ func executeAgentWithConfig(ctx workflow.Context, config AgentConfig, infra type
 
 	switch config.Type {
 	case "security":
-		return workflow.ExecuteActivity(agentCtx, SecurityAgentActivityV2, infra)
+		return workflow.ExecuteActivity(agentCtx, activities.SecurityAgentActivity, infra)
 	case "compliance":
-		return workflow.ExecuteActivity(agentCtx, ComplianceAgentActivityV2, infra)
+		return workflow.ExecuteActivity(agentCtx, activities.ComplianceAgentActivity, infra)
 	case "cost-optimization":
-		return workflow.ExecuteActivity(agentCtx, CostOptimizationAgentActivityV2, infra)
+		return workflow.ExecuteActivity(agentCtx, activities.CostOptimizationAgentActivity, infra)
 	default:
 		// This should not happen, but handle gracefully
 		panic(fmt.Sprintf("Unknown agent type: %s", config.Type))

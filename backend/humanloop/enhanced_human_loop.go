@@ -3,6 +3,7 @@ package humanloop
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.temporal.io/sdk/activity"
@@ -169,9 +170,10 @@ func (him *HumanInteractionManager) WaitForHumanInteraction(ctx workflow.Context
 	var completed bool
 
 	// Handle approval signal
-	selector.AddReceive(approvalCh, func(c workflow.Channel, more bool) {
+	selector.AddReceive(approvalCh, func(c workflow.ReceiveChannel, more bool) {
+		ch := c.(workflow.Channel)
 		var approval HumanApproval
-		c.Receive(ctx, &approval)
+		ch.Receive(ctx, &approval)
 
 		him.recordInteraction("approval_received", approval.UserID, "approve", map[string]interface{}{
 			"comments": approval.Comments,
@@ -188,9 +190,10 @@ func (him *HumanInteractionManager) WaitForHumanInteraction(ctx workflow.Context
 	})
 
 	// Handle rejection signal
-	selector.AddReceive(rejectionCh, func(c workflow.Channel, more bool) {
+	selector.AddReceive(rejectionCh, func(c workflow.ReceiveChannel, more bool) {
+		ch := c.(workflow.Channel)
 		var rejection HumanRejection
-		c.Receive(ctx, &rejection)
+		ch.Receive(ctx, &rejection)
 
 		him.recordInteraction("rejection_received", rejection.UserID, "reject", map[string]interface{}{
 			"reason":   rejection.Reason,
@@ -207,9 +210,10 @@ func (him *HumanInteractionManager) WaitForHumanInteraction(ctx workflow.Context
 	})
 
 	// Handle comment signal (non-decision)
-	selector.AddReceive(commentCh, func(c workflow.Channel, more bool) {
+	selector.AddReceive(commentCh, func(c workflow.ReceiveChannel, more bool) {
+		ch := c.(workflow.Channel)
 		var comment HumanComment
-		c.Receive(ctx, &comment)
+		ch.Receive(ctx, &comment)
 
 		him.recordInteraction("comment_received", comment.UserID, "comment", map[string]interface{}{
 			"comment": comment.Text,
@@ -220,9 +224,10 @@ func (him *HumanInteractionManager) WaitForHumanInteraction(ctx workflow.Context
 	})
 
 	// Handle escalation request
-	selector.AddReceive(escalationCh, func(c workflow.Channel, more bool) {
+	selector.AddReceive(escalationCh, func(c workflow.ReceiveChannel, more bool) {
+		ch := c.(workflow.Channel)
 		var escalation EscalationRequest
-		c.Receive(ctx, &escalation)
+		ch.Receive(ctx, &escalation)
 
 		him.recordInteraction("escalation_requested", escalation.UserID, "escalate", map[string]interface{}{
 			"reason": escalation.Reason,
@@ -342,8 +347,6 @@ func (him *HumanInteractionManager) shouldSendReminder() bool {
 
 // sendReminder sends a reminder notification
 func (him *HumanInteractionManager) sendReminder(ctx workflow.Context) error {
-	logger := workflow.GetLogger(ctx)
-
 	him.timeoutManager.lastReminder = time.Now()
 
 	return workflow.ExecuteActivity(ctx, SendNotificationActivity, NotificationRequest{

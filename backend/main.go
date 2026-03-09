@@ -110,7 +110,7 @@ func ComplianceCheckWorkflow(ctx workflow.Context, data string) (string, error) 
 
 		selector := workflow.NewSelector(ctx)
 		var approval string
-		selector.AddReceive(approvalCh, func(c workflow.Channel, more bool) {
+		selector.AddReceive(approvalCh, func(c workflow.ReceiveChannel, more bool) {
 			c.Receive(ctx, &approval)
 			cancelTimer() // Cancel timer if approval received
 		})
@@ -219,7 +219,7 @@ func main() {
 	w := worker.New(c, "ai-agent-task-queue", worker.Options{})
 
 	// Register enhanced workflows
-	w.RegisterWorkflow(workflows.AIOrchestrationWorkflowV2)
+	w.RegisterWorkflow(workflows.AIAgentOrchestrationWorkflowV2)
 	w.RegisterWorkflow(workflows.EnhancedWorkflowMetricsWorkflow)
 	w.RegisterWorkflow(humanloop.EnhancedHumanInTheLoopWorkflow)
 	w.RegisterWorkflow(performance.OptimizedWorkflow)

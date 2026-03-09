@@ -492,9 +492,9 @@ func SecureWorkflow(ctx workflow.Context, request interface{}) (interface{}, err
 	logger.Info("Starting Secure Workflow")
 
 	// Initialize security components
-	secCommMgr := GetGlobalSecureCommunicationManager()
+	_ = GetGlobalSecureCommunicationManager()
 	auditLogger := GetGlobalAuditLogger()
-	dataProtMgr := GetGlobalDataProtectionManager()
+	_ = GetGlobalDataProtectionManager()
 
 	// Audit workflow start
 	auditLogger.LogEvent(AuditEvent{
@@ -507,14 +507,14 @@ func SecureWorkflow(ctx workflow.Context, request interface{}) (interface{}, err
 	})
 
 	// Register agents securely
-	err := workflow.ExecuteActivity(ctx, RegisterSecureAgentsActivity, nil).Get(ctx, nil)
+	var result interface{}
+	err := workflow.ExecuteActivity(ctx, SecureAgentCommunicationActivity, request).Get(ctx, &result)
 	if err != nil {
 		logger.Error("Failed to register secure agents", "error", err)
 		return nil, err
 	}
 
-	// Execute workflow with encrypted communication
-	result, err := workflow.ExecuteActivity(ctx, SecureAgentCommunicationActivity, request).Get(ctx, nil)
+	err = workflow.ExecuteActivity(ctx, SecureAgentCommunicationActivity, request).Get(ctx, nil)
 	if err != nil {
 		logger.Error("Secure agent communication failed", "error", err)
 		return nil, err
