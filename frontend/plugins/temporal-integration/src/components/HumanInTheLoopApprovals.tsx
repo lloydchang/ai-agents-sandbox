@@ -85,17 +85,59 @@ const HumanInTheLoopApprovals: React.FC = () => {
     fetchPendingApprovals();
     const interval = setInterval(fetchPendingApprovals, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [autoApprovalEnabled]); // Re-fetch when auto-approval setting changes
 
   const fetchPendingApprovals = async () => {
     try {
       const response = await fetch('http://localhost:8081/approvals/pending');
       if (response.ok) {
         const data = await response.json();
-        setPendingApprovals(data);
+        let filteredData = data;
+        
+        // Auto-approve high confidence findings if enabled
+        if (autoApprovalEnabled) {
+          const autoApprovable = data.filter((approval: PendingApproval) => 
+            approval.aggregatedScore >= 95.0 && 
+            approval.riskLevel === 'Low' && 
+            approval.priority === 'Low'
+          );
+          
+          // Auto-approve in background
+          autoApprovable.forEach((approval: PendingApproval) => {
+            submitAutoApproval(approval);
+          });
+          
+          // Filter out auto-approved items
+          filteredData = data.filter((approval: PendingApproval) => 
+            !autoApprovable.some((auto: PendingApproval) => auto.id === approval.id)
+          );
+        }
+        
+        setPendingApprovals(filteredData);
       }
     } catch (error) {
       console.error('Error fetching pending approvals:', error);
+    }
+  };
+
+  const submitAutoApproval = async (approval: PendingApproval) => {
+    try {
+      const autoDecision: ApprovalDecision = {
+        approved: true,
+        comments: 'Auto-approved: High confidence score (>95) with low risk and priority',
+        reviewerId: 'system-auto-approval',
+        reviewedAt: new Date().toISOString(),
+      };
+
+      await fetch(`http://localhost:8081/approvals/${approval.id}/decide`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(autoDecision),
+      });
+    } catch (error) {
+      console.error('Error in auto-approval:', error);
     }
   };
 
