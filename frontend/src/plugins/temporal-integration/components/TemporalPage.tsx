@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+import { Button, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
 interface WorkflowStatus {
   id: string;

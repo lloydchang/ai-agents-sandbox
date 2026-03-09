@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@material-ui/core';
+import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 
 const TemporalPage = () => {
   const [workflows, setWorkflows] = useState<{id: string, status: string}[]>([]);
