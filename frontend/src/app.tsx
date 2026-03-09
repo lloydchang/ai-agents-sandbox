@@ -4,6 +4,8 @@ import { Route, BrowserRouter } from 'react-router-dom';
 import { StylesProvider, createGenerateClassName } from '@material-ui/core/styles';
 import './utils/makeStyles'; // Import the monkey patch
 import { TemporalIntegrationPage } from './plugins/temporal-integration/index';
+import { SplitScreenPage } from './components/SplitScreenPage';
+import { SplitScreenLandingPage } from './components/SplitScreenLandingPage';
 
 // Import catalog plugin
 import { CatalogEntityPage, CatalogIndexPage } from '@backstage/plugin-catalog';
@@ -20,10 +22,11 @@ const App = app.createRoot(
   >
     <BrowserRouter>
       <FlatRoutes>
-        <Route path="/" element={<div><h1>Welcome to Backstage + Temporal Sandbox</h1><p>Navigate to <a href="/catalog">/catalog</a> for software catalog</p><p>Navigate to <a href="/temporal">/temporal</a> for workflow management</p></div>} />
+        <Route path="/" element={<SplitScreenLandingPage />} />
         <Route path="/catalog" element={<CatalogIndexPage />} />
         <Route path="/catalog/:namespace/:kind/:name" element={<CatalogEntityPage />} />
         <Route path="/temporal" element={<TemporalIntegrationPage />} />
+        <Route path="/split-screen" element={<SplitScreenPage />} />
       </FlatRoutes>
     </BrowserRouter>
   </StylesProvider>
