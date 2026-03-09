@@ -14,19 +14,21 @@ import { TemporalIntegrationPage } from './plugins/temporal-integration';
 import Root from './components/Root';
 
 const app = (
-  <FlatRoutes>
-    <Route path="/" element={<CatalogIndexPage />} />
-    <Route path="/catalog/:namespace/:kind/:name" element={<CatalogEntityPage />} />
-    <Route path="/catalog-import" element={<CatalogImportPage />} />
-    <Route path="/docs" element={<TechDocsIndexPage />} />
-    <Route path="/docs/:namespace/:kind/:name/*" element={<TechDocsReaderPage />} />
-    <Route path="/create" element={<ScaffolderPage />} />
-    <Route path="/api-docs" element={<ApiDocsPage />} />
-    <Route path="/tech-radar" element={<TechRadarPage />} />
-    <Route path="/search" element={<SearchPage />} />
-    <Route path="/settings" element={<UserSettingsPage />} />
-    <Route path="/temporal" element={<TemporalIntegrationPage />} />
-  </FlatRoutes>
+  <Root>
+    <FlatRoutes>
+      <Route path="/" element={<CatalogIndexPage />} />
+      <Route path="/catalog/:namespace/:kind/:name" element={<CatalogEntityPage />} />
+      <Route path="/catalog-import" element={<CatalogImportPage />} />
+      <Route path="/docs" element={<TechDocsIndexPage />} />
+      <Route path="/docs/:namespace/:kind/:name/*" element={<TechDocsReaderPage />} />
+      <Route path="/create" element={<ScaffolderPage />} />
+      <Route path="/api-docs" element={<ApiDocsPage />} />
+      <Route path="/tech-radar" element={<TechRadarPage />} />
+      <Route path="/search" element={<SearchPage />} />
+      <Route path="/settings" element={<UserSettingsPage />} />
+      <Route path="/temporal" element={<TemporalIntegrationPage />} />
+    </FlatRoutes>
+  </Root>
 );
 
 export default app;

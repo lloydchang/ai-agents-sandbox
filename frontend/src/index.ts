@@ -10,5 +10,5 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     {app}
-  </React.StrictMode>
+  </React.StrictMode>,
 );
