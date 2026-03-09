@@ -150,4 +150,12 @@ This sandbox is designed for experimentation and can be extended with:
 
 ## License
 
-Apache 2.0 - See LICENSE file for details
+repo-root/                      <- AGPLv3 (overall repo license now)
+├── LICENSE                     <- AGPLv3
+├── frontend/                    <- Backstage code
+│   ├── LICENSE                 <- Apache 2.0
+│   └── package.json
+├── backend/                     <- Temporal code
+│   ├── LICENSE                 <- MIT
+│   └── package.json
+
