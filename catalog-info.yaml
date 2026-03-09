@@ -10,6 +10,7 @@ spec:
   type: service
   lifecycle: experimental
   owner: backstage-team
+  system: backstage-temporal-system
   providesApis:
     - temporal-workflow-api
     - backstage-temporal-api
@@ -88,4 +89,14 @@ metadata:
 spec:
   type: website
   lifecycle: experimental
+  owner: backstage-team
+  system: backstage-temporal-system
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: backstage-temporal-system
+  description: System integrating Backstage with Temporal workflows
+spec:
   owner: backstage-team
