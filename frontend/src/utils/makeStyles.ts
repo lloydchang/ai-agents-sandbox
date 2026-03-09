@@ -65,7 +65,7 @@
     if (funcStr.includes('sheetsRegistry') && funcStr.includes('dynamicSheet')) {
       try {
         return originalApply.call(this, thisArg, args);
-      } catch (error) {
+      } catch (error: any) {
         // Check if it's our target error
         if (error && error.message && (
           error.message.includes('refs') ||
@@ -86,7 +86,7 @@
     if (funcStr.includes('sheetsRegistry') && funcStr.includes('dynamicSheet')) {
       try {
         return originalCall.call(this, thisArg, ...args);
-      } catch (error) {
+      } catch (error: any) {
         // Check if it's our target error
         if (error && error.message && (
           error.message.includes('refs') ||
@@ -108,8 +108,8 @@
       window.ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.safelyCallDestroy = function(...args) {
         try {
           return originalSafelyCallDestroy.apply(this, args);
-        } catch (error) {
-          if (error && error.message && error.message.includes('refs')) {
+      } catch (error: any) {
+        if (error && error.message && error.message.includes('refs')) {
             return; // Silently ignore
           }
           throw error;
