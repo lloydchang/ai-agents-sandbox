@@ -64,7 +64,7 @@
     const funcStr = this.toString();
     if (funcStr.includes('sheetsRegistry') && funcStr.includes('dynamicSheet')) {
       try {
-        return originalApply.call(this, thisArg, args);
+        return Reflect.apply(originalApply, this, [thisArg, args]);
       } catch (error: any) {
         // Check if it's our target error
         if (error && error.message && (
@@ -77,7 +77,7 @@
         throw error;
       }
     }
-    return originalApply.call(this, thisArg, args);
+    return Reflect.apply(originalApply, this, [thisArg, args]);
   };
   
   Function.prototype.call = function(thisArg, ...args) {
@@ -85,7 +85,7 @@
     const funcStr = this.toString();
     if (funcStr.includes('sheetsRegistry') && funcStr.includes('dynamicSheet')) {
       try {
-        return originalCall.call(this, thisArg, ...args);
+        return Reflect.apply(originalCall, this, [thisArg, ...args]);
       } catch (error: any) {
         // Check if it's our target error
         if (error && error.message && (
@@ -98,7 +98,7 @@
         throw error;
       }
     }
-    return originalCall.call(this, thisArg, ...args);
+    return Reflect.apply(originalCall, this, [thisArg, ...args]);
   };
   
   // Also patch React's safelyCallDestroy function
