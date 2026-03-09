@@ -1,0 +1,32 @@
+# Combined .dockerignore from Backstage and Temporal projects
+
+# Common patterns
+.git
+.github
+.idea
+.vscode
+*.md
+
+# Backstage specific
+.yarn/cache
+.yarn/install-state.gz
+docs
+microsite
+node_modules
+packages/*/src
+packages/*/node_modules
+plugins
+
+# Temporal specific
+.coverage
+.testoutput
+
+# Exclude binaries from the docker build context
+tdbg
+temporal-server
+temporal-cassandra-tool
+temporal-sql-tool
+temporal-elasticsearch-tool
+
+# Temporal docker compose
+develop/docker-compose
