@@ -29,6 +29,9 @@ catalog:
       github:
         organization: 'backstage'
         catalogPath: '/catalog-info.yaml'
+  locations:
+    - type: file
+      target: ../../catalog-info.yaml
 
 temporal:
   backendUrl: http://localhost:8081
