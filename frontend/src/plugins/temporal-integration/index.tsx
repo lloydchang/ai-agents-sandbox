@@ -7,6 +7,8 @@ import {
   ResponseErrorPanel,
 } from '@backstage/core-components';
 import { Button, Grid, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@material-ui/core';
+import { useApi } from '@backstage/core-plugin-api';
+import { configApiRef } from '@backstage/core-plugin-api';
 
 interface WorkflowStatus {
   id: string;
@@ -18,13 +20,15 @@ export const TemporalIntegrationPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error>();
   const [workflows, setWorkflows] = useState<WorkflowStatus[]>([]);
+  const config = useApi(configApiRef);
+  const backendUrl = config.getString('temporal.backendUrl');
 
   const startWorkflow = async () => {
     setLoading(true);
     setError(undefined);
     
     try {
-      const response = await fetch('http://localhost:8081/workflow/start', {
+      const response = await fetch(`${backendUrl}/workflow/start`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +56,7 @@ export const TemporalIntegrationPage = () => {
 
   const checkWorkflowStatus = async (workflowId: string) => {
     try {
-      const response = await fetch(`http://localhost:8081/workflow/status?id=${workflowId}`);
+      const response = await fetch(`${backendUrl}/workflow/status?id=${workflowId}`);
       
       if (!response.ok) {
         throw new Error(`Failed to get workflow status: ${response.statusText}`);

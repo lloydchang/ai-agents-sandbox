@@ -10,7 +10,7 @@ organization:
   name: Backstage
 
 frontend:
-  baseUrl: http://localhost:3000
+  baseUrl: http://localhost:3001
 
 techdocs:
   storageUrl: http://localhost:7007/api/techdocs/static/docs
@@ -29,3 +29,6 @@ catalog:
       github:
         organization: 'backstage'
         catalogPath: '/catalog-info.yaml'
+
+temporal:
+  backendUrl: http://localhost:8081
