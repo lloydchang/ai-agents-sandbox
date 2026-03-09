@@ -1,4 +1,4 @@
-# Backstage + Temporal Sandbox
+#  Sandbox: Backstage + Temporal
 
 This repository provides a complete sandbox environment for experimenting with Backstage (TypeScript frontend) and Temporal (Go backend) integration, including Dockerized environments, sample workflows, Backstage plugin, and local development scripts.
 
