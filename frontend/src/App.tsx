@@ -1,10 +1,13 @@
 import React from 'react';
+import { FlatRoutes } from '@backstage/core-app-api';
 
 const app = (
-  <div>
-    <h1>Welcome to Backstage + Temporal Sandbox</h1>
-    <p>Basic rendering test</p>
-  </div>
+  <FlatRoutes>
+    <div>
+      <h1>Welcome to Backstage + Temporal Sandbox</h1>
+      <p>Backstage is now working!</p>
+    </div>
+  </FlatRoutes>
 );
 
 export default app;
