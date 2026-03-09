@@ -151,13 +151,11 @@ This sandbox is designed for experimentation and can be extended with:
 ## License
 
 ```
-repo-root/                      <- AGPLv3 (overall repo license now)
+repo-root/                      <- AGPLv3 (overall repo)
 ├── LICENSE                     <- AGPLv3
-├── frontend/                    <- Backstage code
+├── frontend/                   <- Backstage code
 │   ├── LICENSE                 <- Apache 2.0
-│   └── package.json
-├── backend/                     <- Temporal code
+├── backend/                    <- Temporal code
 │   ├── LICENSE                 <- MIT
-│   └── package.json
 ```
 
