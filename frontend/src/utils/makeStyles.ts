@@ -54,6 +54,26 @@
     }
     return false;
   };
+
+  // Add global error event listener
+  window.addEventListener('error', function(event) {
+    if (event.error && event.error.message && (
+      event.error.message.includes('refs') ||
+      event.error.message.includes('remove')
+    )) {
+      event.preventDefault();
+    }
+  });
+
+  // Add unhandledrejection event listener
+  window.addEventListener('unhandledrejection', function(event) {
+    if (event.reason && event.reason.message && (
+      event.reason.message.includes('refs') ||
+      event.reason.message.includes('remove')
+    )) {
+      event.preventDefault();
+    }
+  });
   
   // More aggressive patching - intercept any function that might be the detach function
   const originalApply = Function.prototype.apply;
