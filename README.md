@@ -148,12 +148,15 @@ This sandbox is designed for experimentation and can be extended with:
 - **Additional Workflows**: Complex business logic examples
 - **Enhanced UI**: Advanced workflow visualization and management
 
+---
+
+## Open-source software
+
+https://github.com/lloydchang/backstage-temporal
+
+---
+
 ## License
 
-```
-repo-root/                      <- AGPLv3 (overall repo)
-├── LICENSE                     <- AGPLv3
-├── frontend/                   <- Backstage code
-│   ├── LICENSE                 <- Apache 2.0
-```
+[GNU Affero General Public License v3.0 or later](https://github.com/lloydchang/backstage-temporal/blob/main/LICENSE)
 
