@@ -8,7 +8,10 @@ import { CatalogEntityPage, CatalogIndexPage } from '@backstage/plugin-catalog';
 
 const app = createApp({
   apis: [],
-  plugins: [],
+  plugins: [
+    // Add catalog plugin
+    import('@backstage/plugin-catalog').then(m => m.plugin),
+  ],
 });
 
 const App = app.createRoot(
