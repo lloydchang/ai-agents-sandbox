@@ -9,3 +9,5 @@
 - Prepared temporal-integration plugin
 - Developed local development and build scripts
 - Updated documentation
+- Added GitHub Actions CI workflow
+- Added placeholders for AI agent integration and multi-cloud hooks

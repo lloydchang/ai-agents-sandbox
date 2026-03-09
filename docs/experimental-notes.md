@@ -9,6 +9,6 @@ Key points:
 - Docker Compose for infrastructure
 
 Future experiments:
-- AI agent integration
-- Multi-cloud hooks
-- GitHub Actions CI
+- AI agent integration: Placeholder for orchestrating Temporal workflows via AI agents.
+- Multi-cloud hooks: Placeholder for hooks to AWS Proton, Azure Foundry.
+- GitHub Actions CI: Implemented basic CI workflow for linting, tests, and builds.
