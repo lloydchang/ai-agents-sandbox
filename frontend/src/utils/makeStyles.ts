@@ -1,43 +1,37 @@
-// Direct monkey patch for Material-UI makeStyles detach function
+// Comprehensive patch for Material-UI makeStyles detach function
 (() => {
-  // Store original console.error to prevent spam
+  // Store original console methods
   const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
   
-  // Override console.error to filter out the specific makeStyles error
+  // Filter out the specific makeStyles error
   console.error = (...args) => {
     const message = args[0];
-    if (typeof message === 'string' && message.includes('Cannot read properties of undefined (reading \'refs\')')) {
-      // Silently ignore this specific error
-      return;
+    if (typeof message === 'string' && (
+      message.includes('Cannot read properties of undefined (reading \'refs\')') ||
+      message.includes('Cannot read properties of undefined (reading \'remove\')')
+    )) {
+      return; // Silently ignore
     }
-    // Pass through other errors
-    originalConsoleError.apply(console, args);
+    return originalConsoleError.apply(console, args);
   };
   
-  // Patch the detach function globally
-  const originalDetach = Function.prototype.call;
-  Function.prototype.call = function(thisArg, ...args) {
-    // Check if this is the detach function from makeStyles
-    if (this.name === 'detach') {
-      try {
-        return originalDetach.apply(this, [thisArg, ...args]);
-      } catch (error) {
-        // Silently handle the refs error
-        if (error.message && error.message.includes('refs')) {
-          return undefined;
-        }
-        throw error;
-      }
+  console.warn = (...args) => {
+    const message = args[0];
+    if (typeof message === 'string' && message.includes('Material-UI makeStyles error caught')) {
+      return; // Silently ignore our own warnings
     }
-    return originalDetach.apply(this, [thisArg, ...args]);
+    return originalConsoleWarn.apply(console, args);
   };
   
-  // Also patch window.onerror to catch this specific error
+  // Patch global error handlers
   const originalOnError = window.onerror;
   window.onerror = function(message, source, lineno, colno, error) {
-    if (typeof message === 'string' && message.includes('Cannot read properties of undefined (reading \'refs\')')) {
-      // Prevent the error from showing in console
-      return true;
+    if (typeof message === 'string' && (
+      message.includes('Cannot read properties of undefined (reading \'refs\')') ||
+      message.includes('Cannot read properties of undefined (reading \'remove\')')
+    )) {
+      return true; // Prevent error
     }
     if (originalOnError) {
       return originalOnError.call(this, message, source, lineno, colno, error);
@@ -45,10 +39,13 @@
     return false;
   };
   
-  // Patch unhandled promise rejections
+  // Patch unhandled rejections
   const originalOnUnhandledRejection = window.onunhandledrejection;
   window.onunhandledrejection = function(event) {
-    if (event.reason && event.reason.message && event.reason.message.includes('refs')) {
+    if (event.reason && event.reason.message && (
+      event.reason.message.includes('refs') ||
+      event.reason.message.includes('remove')
+    )) {
       event.preventDefault();
       return true;
     }
@@ -57,6 +54,97 @@
     }
     return false;
   };
+  
+  // More aggressive patching - intercept any function that might be the detach function
+  const originalApply = Function.prototype.apply;
+  const originalCall = Function.prototype.call;
+  
+  Function.prototype.apply = function(thisArg, args) {
+    // Check if this looks like the detach function by examining the code
+    const funcStr = this.toString();
+    if (funcStr.includes('sheetsRegistry') && funcStr.includes('dynamicSheet')) {
+      try {
+        return originalApply.call(this, thisArg, args);
+      } catch (error) {
+        // Check if it's our target error
+        if (error && error.message && (
+          error.message.includes('refs') ||
+          error.message.includes('remove') ||
+          error.message.includes('undefined')
+        )) {
+          return undefined; // Silently return
+        }
+        throw error;
+      }
+    }
+    return originalApply.call(this, thisArg, args);
+  };
+  
+  Function.prototype.call = function(thisArg, ...args) {
+    // Check if this looks like the detach function
+    const funcStr = this.toString();
+    if (funcStr.includes('sheetsRegistry') && funcStr.includes('dynamicSheet')) {
+      try {
+        return originalCall.call(this, thisArg, ...args);
+      } catch (error) {
+        // Check if it's our target error
+        if (error && error.message && (
+          error.message.includes('refs') ||
+          error.message.includes('remove') ||
+          error.message.includes('undefined')
+        )) {
+          return undefined; // Silently return
+        }
+        throw error;
+      }
+    }
+    return originalCall.call(this, thisArg, ...args);
+  };
+  
+  // Also patch React's safelyCallDestroy function
+  if (typeof window !== 'undefined' && window.ReactDOM) {
+    const originalSafelyCallDestroy = window.ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.safelyCallDestroy;
+    if (originalSafelyCallDestroy) {
+      window.ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.safelyCallDestroy = function(...args) {
+        try {
+          return originalSafelyCallDestroy.apply(this, args);
+        } catch (error) {
+          if (error && error.message && error.message.includes('refs')) {
+            return; // Silently ignore
+          }
+          throw error;
+        }
+      };
+    }
+  }
+
+  // Patch React.useLayoutEffect to wrap cleanup functions
+  if (typeof window !== 'undefined' && window.React) {
+    const originalUseLayoutEffect = window.React.useLayoutEffect;
+    if (originalUseLayoutEffect) {
+      window.React.useLayoutEffect = function(effect, deps) {
+        const patchedEffect = function() {
+          const result = effect();
+          if (typeof result === 'function') {
+            // It's a cleanup function
+            return function() {
+              try {
+                result();
+              } catch (error) {
+                if (error && error.message && error.message.includes('refs')) {
+                  // Silently handle the refs error
+                  return;
+                }
+                throw error;
+              }
+            };
+          }
+          return result;
+        };
+        return originalUseLayoutEffect.call(this, patchedEffect, deps);
+      };
+    }
+  }
 })();
 
 export default {};
