@@ -91,6 +91,15 @@ func main() {
 	// Apply CORS middleware
 	r.Use(corsMiddleware)
 	
+	// Add explicit OPTIONS handler for CORS preflight
+	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}).Methods("OPTIONS")
+	
+	r.HandleFunc("/workflow/status", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}).Methods("OPTIONS")
+	
 	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {
 		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
 			ID:        "backstage-workflow-" + time.Now().Format("20060102150405"),
