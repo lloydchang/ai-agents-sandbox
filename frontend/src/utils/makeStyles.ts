@@ -34,7 +34,7 @@
       return true; // Prevent error
     }
     if (originalOnError) {
-      return originalOnError.call(this, message, source, lineno, colno, error);
+      return originalOnError.call(this as Window, message, source, lineno, colno, error);
     }
     return false;
   };
@@ -122,12 +122,12 @@
   if (typeof window !== 'undefined' && (window as any).React) {
     const originalUseLayoutEffect = (window as any).React.useLayoutEffect;
     if (originalUseLayoutEffect) {
-      (window as any).React.useLayoutEffect = function(effect, deps) {
+      (window as any).React.useLayoutEffect = function(effect: any, deps: any) {
         const patchedEffect = function() {
           const result = effect();
           if (typeof result === 'function') {
             // It's a cleanup function
-            return function(...args: any[]) {
+            return function(..._args: any[]) {
               try {
                 result();
               } catch (error: any) {
