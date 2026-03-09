@@ -6,11 +6,14 @@
   
   // Filter out the specific makeStyles error
   console.error = (...args) => {
-    const message = args[0];
-    if (typeof message === 'string' && (
-      message.includes('Cannot read properties of undefined (reading \'refs\')') ||
-      message.includes('Cannot read properties of undefined (reading \'remove\')')
-    )) {
+    const firstArg = args[0];
+    if ((typeof firstArg === 'string' && (
+      firstArg.includes('Cannot read properties of undefined (reading \'refs\')') ||
+      firstArg.includes('Cannot read properties of undefined (reading \'remove\')')
+    )) || (firstArg instanceof Error && firstArg.message && (
+      firstArg.message.includes('refs') ||
+      firstArg.message.includes('remove')
+    ))) {
       return; // Silently ignore
     }
     return originalConsoleError.apply(console, args);
