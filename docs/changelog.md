@@ -11,3 +11,4 @@
 - Updated documentation
 - Added GitHub Actions CI workflow
 - Added placeholders for AI agent integration and multi-cloud hooks
+- Scaffolded temporal-integration plugin with UI for triggering and viewing workflows

@@ -1,0 +1,31 @@
+app:
+  title: Backstage + Temporal Sandbox
+
+backend:
+  baseUrl: http://localhost:7007
+  listen:
+    port: 7007
+
+organization:
+  name: Backstage
+
+frontend:
+  baseUrl: http://localhost:3000
+
+techdocs:
+  storageUrl: http://localhost:7007/api/techdocs/static/docs
+
+auth:
+  environment: development
+
+scaffolder:
+  auth:
+    providers:
+      guest: {}
+
+catalog:
+  providers:
+    entity:
+      github:
+        organization: 'backstage'
+        catalogPath: '/catalog-info.yaml'
