@@ -2,7 +2,6 @@ package emulators
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -305,7 +304,7 @@ func (e *InfrastructureEmulator) GetSecurityPosture(ctx context.Context, resourc
 }
 
 func (e *InfrastructureEmulator) GetComplianceStatus(ctx context.Context, resourceID string, standards []string) (ComplianceStatus, error) {
-	resource, err := e.GetResource(ctx, resourceID)
+	_, err := e.GetResource(ctx, resourceID)
 	if err != nil {
 		return ComplianceStatus{}, err
 	}

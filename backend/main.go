@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -16,7 +17,13 @@ import (
 	
 	// Import our custom packages
 	"github.com/lloydchang/backstage-temporal/backend/activities"
+	"github.com/lloydchang/backstage-temporal/backend/config"
 	"github.com/lloydchang/backstage-temporal/backend/emulators"
+	"github.com/lloydchang/backstage-temporal/backend/humanloop"
+	"github.com/lloydchang/backstage-temporal/backend/monitoring"
+	"github.com/lloydchang/backstage-temporal/backend/performance"
+	"github.com/lloydchang/backstage-temporal/backend/security"
+	"github.com/lloydchang/backstage-temporal/backend/types"
 	"github.com/lloydchang/backstage-temporal/backend/workflows"
 )
 
@@ -168,9 +175,40 @@ func HumanReviewActivity(ctx context.Context, aggregatedResult string) (string, 
 }
 
 func main() {
-	// Initialize the infrastructure emulator
+	// Load configuration
+	cfg := config.DefaultConfig()
+	configManager, err := config.NewConfigManager("config.json")
+	if err != nil {
+		log.Printf("Warning: Failed to load config file, using defaults: %v", err)
+		configManager = &config.ConfigManager{}
+		*configManager = config.ConfigManager{}
+	} else {
+		cfg = configManager.GetConfig()
+	}
+
+	// Initialize infrastructure emulator
 	emulator := emulators.GetGlobalEmulator()
 	log.Printf("Infrastructure emulator initialized")
+
+	// Initialize monitoring system
+	metricsCollector := monitoring.GetGlobalMetricsCollector()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Start metrics collection
+	go metricsCollector.Start(ctx, cfg.Monitoring.MetricsInterval)
+
+	// Initialize performance optimization components
+	concurrencyMgr := performance.GetGlobalConcurrencyManager()
+	resourcePool := performance.GetGlobalResourcePool()
+
+	// Initialize security components
+	secCommMgr := security.GetGlobalSecureCommunicationManager()
+	auditLogger := security.GetGlobalAuditLogger()
+	dataProtMgr := security.GetGlobalDataProtectionManager()
+
+	// Start performance monitoring
+	go concurrencyMgr.ProcessQueue(ctx)
 
 	c, err := client.NewClient(client.Options{})
 	if err != nil {
@@ -179,32 +217,53 @@ func main() {
 	defer c.Close()
 
 	w := worker.New(c, "ai-agent-task-queue", worker.Options{})
-	
-	// Register workflows
-	w.RegisterWorkflow(workflows.AIOrchestrationWorkflow)
-	w.RegisterWorkflow(workflows.HumanInTheLoopWorkflow)
-	w.RegisterWorkflow(workflows.MultiAgentCollaborationWorkflow)
-	w.RegisterWorkflow(HelloBackstageWorkflow)
-	w.RegisterWorkflow(ComplianceCheckWorkflow)
 
-	// Register activities
+	// Register enhanced workflows
+	w.RegisterWorkflow(workflows.AIOrchestrationWorkflowV2)
+	w.RegisterWorkflow(workflows.EnhancedWorkflowMetricsWorkflow)
+	w.RegisterWorkflow(humanloop.EnhancedHumanInTheLoopWorkflow)
+	w.RegisterWorkflow(performance.OptimizedWorkflow)
+	w.RegisterWorkflow(performance.PerformanceMonitoringWorkflow)
+	w.RegisterWorkflow(security.SecureWorkflow)
+
+	// Register enhanced activities
+	w.RegisterActivity(activities.SecurityAgentActivityV2)
+	w.RegisterActivity(activities.ComplianceAgentActivityV2)
+	w.RegisterActivity(activities.CostOptimizationAgentActivityV2)
+	w.RegisterActivity(activities.AggregateAgentResultsActivityV2)
+	w.RegisterActivity(activities.GenerateComplianceReportActivityV2)
+	w.RegisterActivity(activities.HumanReviewActivityV2)
+
+	// Register monitoring activities
+	w.RegisterActivity(monitoring.RecordWorkflowMetricsActivity)
+	w.RegisterActivity(monitoring.RecordAgentMetricsActivity)
+	w.RegisterActivity(monitoring.GetMetricsActivity)
+	w.RegisterActivity(monitoring.HealthCheckActivity)
+	w.RegisterActivity(monitoring.PerformanceMetricsActivity)
+
+	// Register human loop activities
+	w.RegisterActivity(humanloop.RouteTaskActivity)
+	w.RegisterActivity(humanloop.SendNotificationActivity)
+	w.RegisterActivity(humanloop.ProcessHumanDecisionActivity)
+
+	// Register performance activities
+	w.RegisterActivity(performance.OptimizedActivity)
+	w.RegisterActivity(performance.HealthCheckActivity)
+	w.RegisterActivity(performance.PerformanceMetricsActivity)
+
+	// Register security activities
+	w.RegisterActivity(security.RegisterSecureAgentsActivity)
+	w.RegisterActivity(security.SecureAgentCommunicationActivity)
+	w.RegisterActivity(security.AuditActivity)
+
+	// Register legacy activities for backward compatibility
 	w.RegisterActivity(activities.DiscoverInfrastructureActivity)
 	w.RegisterActivity(activities.SecurityAgentActivity)
 	w.RegisterActivity(activities.ComplianceAgentActivity)
 	w.RegisterActivity(activities.CostOptimizationAgentActivity)
 	w.RegisterActivity(activities.AggregateAgentResultsActivity)
 	w.RegisterActivity(activities.GenerateComplianceReportActivity)
-	w.RegisterActivity(activities.PrimaryAgentActivity)
-	w.RegisterActivity(activities.ValidationAgentActivity)
-	w.RegisterActivity(activities.BuildConsensusActivity)
-	w.RegisterActivity(activities.GenerateFinalRecommendationActivity)
 	w.RegisterActivity(activities.HumanReviewActivity)
-	
-	// Register legacy activities
-	w.RegisterActivity(FetchDataActivity)
-	w.RegisterActivity(ProcessDataActivity)
-	w.RegisterActivity(AgentCheckActivity)
-	w.RegisterActivity(AggregateResultsActivity)
 
 	err = w.Start()
 	if err != nil {
@@ -213,32 +272,33 @@ func main() {
 
 	// HTTP server for endpoints
 	r := mux.NewRouter()
-	
+
 	// Apply CORS middleware
 	r.Use(corsMiddleware)
-	
+
 	// Add explicit OPTIONS handlers for CORS preflight
 	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods("OPTIONS")
-	
-	r.HandleFunc("/workflow/signal/{workflowId}", func(w http.ResponseWriter, r *http.Request) {
+
+	r.HandleFunc("/workflow/status", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}).Methods("OPTIONS")
-	
-	r.HandleFunc("/workflow/start-ai-orchestration", func(w http.ResponseWriter, r *http.Request) {
-		request := workflows.ComplianceRequest{
+
+	// Enhanced workflow endpoints
+	r.HandleFunc("/workflow/start-ai-orchestration-v2", func(w http.ResponseWriter, r *http.Request) {
+		request := types.ComplianceRequest{
 			TargetResource: "vm-web-server-001",
 			ComplianceType: "full-scan",
 			Parameters:     make(map[string]string),
 			RequesterID:    "backstage-user",
 			Priority:       "normal",
 		}
-		
+
 		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
-			ID:        "ai-orchestration-" + time.Now().Format("20060102150405"),
+			ID:        "ai-orchestration-v2-" + time.Now().Format("20060102150405"),
 			TaskQueue: "ai-agent-task-queue",
-		}, workflows.AIOrchestrationWorkflow, request)
+		}, workflows.AIOrchestrationWorkflowV2, request)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -246,22 +306,22 @@ func main() {
 		w.Write([]byte(we.GetID()))
 	}).Methods("POST")
 
-	r.HandleFunc("/workflow/start-human-in-loop", func(w http.ResponseWriter, r *http.Request) {
-		task := workflows.HumanTask{
+	r.HandleFunc("/workflow/start-enhanced-human-loop", func(w http.ResponseWriter, r *http.Request) {
+		task := types.HumanTask{
 			ID:          "task-" + time.Now().Format("20060102150405"),
-			Title:       "Security Review Required",
-			Description: "Please review the security compliance findings",
+			Title:       "Enhanced Security Review",
+			Description: "Advanced security compliance review with intelligent routing",
 			Priority:    "high",
 			AssignedTo:  "security-team",
 			DueAt:       time.Now().Add(24 * time.Hour),
-			Status:      workflows.HumanTaskStatus{State: "pending", UpdatedAt: time.Now()},
+			Status:      types.HumanTaskStatus{State: "pending", UpdatedAt: time.Now()},
 			Data:        make(map[string]interface{}),
 		}
-		
+
 		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
-			ID:        "human-in-loop-" + time.Now().Format("20060102150405"),
+			ID:        "enhanced-human-loop-" + time.Now().Format("20060102150405"),
 			TaskQueue: "ai-agent-task-queue",
-		}, workflows.HumanInTheLoopWorkflow, task)
+		}, humanloop.EnhancedHumanInTheLoopWorkflow, task)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -269,31 +329,11 @@ func main() {
 		w.Write([]byte(we.GetID()))
 	}).Methods("POST")
 
-	r.HandleFunc("/workflow/start-multi-agent", func(w http.ResponseWriter, r *http.Request) {
-		request := workflows.CollaborationRequest{
-			TaskID:           "collab-" + time.Now().Format("20060102150405"),
-			PrimaryAgent:     "security",
-			ValidationAgents: []string{"compliance", "cost-optimization"},
-			Data:             make(map[string]interface{}),
-			ConsensusType:    "majority",
-		}
-		
+	r.HandleFunc("/workflow/start-optimized", func(w http.ResponseWriter, r *http.Request) {
 		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
-			ID:        "multi-agent-" + time.Now().Format("20060102150405"),
+			ID:        "optimized-workflow-" + time.Now().Format("20060102150405"),
 			TaskQueue: "ai-agent-task-queue",
-		}, workflows.MultiAgentCollaborationWorkflow, request)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Write([]byte(we.GetID()))
-	}).Methods("POST")
-	
-	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {
-		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
-			ID:        "backstage-workflow-" + time.Now().Format("20060102150405"),
-			TaskQueue: "ai-agent-task-queue",
-		}, HelloBackstageWorkflow, "Backstage")
+		}, performance.OptimizedWorkflow, map[string]interface{}{"optimized": true})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -301,40 +341,103 @@ func main() {
 		w.Write([]byte(we.GetID()))
 	}).Methods("POST")
 
-	r.HandleFunc("/workflow/start-compliance", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/workflow/start-secure", func(w http.ResponseWriter, r *http.Request) {
 		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
-			ID:        "compliance-workflow-" + time.Now().Format("20060102150405"),
+			ID:        "secure-workflow-" + time.Now().Format("20060102150405"),
 			TaskQueue: "ai-agent-task-queue",
-		}, ComplianceCheckWorkflow, "Compliance Data")
+		}, security.SecureWorkflow, map[string]interface{}{"secure": true})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		w.Write([]byte(we.GetID()))
 	}).Methods("POST")
+
+	r.HandleFunc("/workflow/status", func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			http.Error(w, "missing id", http.StatusBadRequest)
+			return
+		}
+		resp, err := c.DescribeWorkflowExecution(context.Background(), id, "")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte(resp.WorkflowExecutionInfo.Status.String()))
+	}).Methods("GET")
 
 	r.HandleFunc("/workflow/signal/{workflowId}", func(w http.ResponseWriter, r *http.Request) {
 		workflowId := mux.Vars(r)["workflowId"]
-		
+
 		var signalReq struct {
 			Signal string `json:"signal"`
 			Value  string `json:"value"`
 		}
-		
+
 		if err := json.NewDecoder(r.Body).Decode(&signalReq); err != nil {
 			http.Error(w, "invalid JSON", http.StatusBadRequest)
 			return
 		}
-		
+
 		err := c.SignalWorkflow(context.Background(), workflowId, "", signalReq.Signal, signalReq.Value)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		
+
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Signal sent"))
 	}).Methods("POST")
+
+	// Enhanced monitoring endpoints
+	r.HandleFunc("/monitoring/metrics", func(w http.ResponseWriter, r *http.Request) {
+		metrics := metricsCollector.GetMetrics()
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(metrics)
+	}).Methods("GET")
+
+	r.HandleFunc("/monitoring/alerts", func(w http.ResponseWriter, r *http.Request) {
+		alerts := metricsCollector.GetAlerts()
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(alerts)
+	}).Methods("GET")
+
+	r.HandleFunc("/monitoring/health", func(w http.ResponseWriter, r *http.Request) {
+		health := map[string]interface{}{
+			"status":          "healthy",
+			"timestamp":       time.Now(),
+			"activeWorkflows": concurrencyMgr.GetActiveCount(),
+			"availableResources": resourcePool.GetAvailable(),
+			"metricsEnabled":  true,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(health)
+	}).Methods("GET")
+
+	// Enhanced audit endpoints
+	r.HandleFunc("/audit/events", func(w http.ResponseWriter, r *http.Request) {
+		events := auditLogger.GetEvents(nil)
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(events)
+	}).Methods("GET")
+
+	// Performance endpoints
+	r.HandleFunc("/performance/stats", func(w http.ResponseWriter, r *http.Request) {
+		stats := map[string]interface{}{
+			"activeWorkflows": concurrencyMgr.GetActiveCount(),
+			"queuedWorkflows": concurrencyMgr.GetQueuedCount(),
+			"resourceUtilization": resourcePool.GetUtilization(),
+			"throughput": concurrencyMgr.GetThroughput(),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(stats)
+	}).Methods("GET")
 
 	// Infrastructure emulator endpoints
 	r.HandleFunc("/emulator/resources", func(w http.ResponseWriter, r *http.Request) {
@@ -344,9 +447,8 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
-		// Simple JSON encoding
 		json.NewEncoder(w).Encode(resources)
 	}).Methods("GET")
 
@@ -357,7 +459,7 @@ func main() {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resource)
 	}).Methods("GET")
@@ -369,24 +471,24 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(posture)
 	}).Methods("GET")
 
 	r.HandleFunc("/emulator/resources/{id}/compliance", func(w http.ResponseWriter, r *http.Request) {
 		resourceID := mux.Vars(r)["id"]
-		standards := []string{"SOC2", "GDPR", "HIPAA"} // Default standards
+		standards := []string{"SOC2", "GDPR", "HIPAA"}
 		status, err := emulator.GetComplianceStatus(context.Background(), resourceID, standards)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(status)
 	}).Methods("GET")
 
-	log.Printf("Starting HTTP server on :8081")
+	log.Printf("Starting enhanced HTTP server on :8081 with %d registered workflows", len(w.GetRegisteredWorkflowTypes()))
 	log.Fatal(http.ListenAndServe(":8081", r))
 }

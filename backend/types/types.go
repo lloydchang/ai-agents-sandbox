@@ -1,4 +1,4 @@
-package main
+package types
 
 import "time"
 
@@ -23,12 +23,12 @@ type AgentResult struct {
 }
 
 type AggregatedResult struct {
-	OverallScore       float64        `json:"overallScore"`
-	AgentResults       []AgentResult  `json:"agentResults"`
-	RequiresHumanReview bool          `json:"requiresHumanReview"`
-	RiskLevel          string         `json:"riskLevel"`
-	Summary            string         `json:"summary"`
-	HumanReviewResult  *HumanReviewResult `json:"humanReviewResult,omitempty"`
+	OverallScore       float64             `json:"overallScore"`
+	AgentResults       []AgentResult       `json:"agentResults"`
+	RequiresHumanReview bool               `json:"requiresHumanReview"`
+	RiskLevel          string              `json:"riskLevel"`
+	Summary            string              `json:"summary"`
+	HumanReviewResult  *HumanReviewResult  `json:"humanReviewResult,omitempty"`
 }
 
 type HumanReviewResult struct {

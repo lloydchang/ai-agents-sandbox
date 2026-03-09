@@ -2,23 +2,23 @@ package activities
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math/rand"
 	"time"
 
 	"go.temporal.io/sdk/activity"
+	"github.com/lloydchang/backstage-temporal/backend/types"
 )
 
 // Infrastructure Discovery Activities
 
-func DiscoverInfrastructureActivity(ctx context.Context, targetResource string) (InfrastructureResult, error) {
+func DiscoverInfrastructureActivity(ctx context.Context, targetResource string) (types.InfrastructureResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Discovering infrastructure", "target", targetResource)
 
 	// Simulate infrastructure discovery
 	// In real implementation, this would query cloud APIs or configuration files
-	result := InfrastructureResult{
+	result := types.InfrastructureResult{
 		ResourceID:   fmt.Sprintf("resource-%s", targetResource),
 		ResourceType: "VirtualMachine",
 		Properties: map[string]interface{}{
@@ -42,7 +42,7 @@ func DiscoverInfrastructureActivity(ctx context.Context, targetResource string) 
 
 // AI Agent Activities
 
-func SecurityAgentActivity(ctx context.Context, infra InfrastructureResult) (AgentResult, error) {
+func SecurityAgentActivity(ctx context.Context, infra types.InfrastructureResult) (types.AgentResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Security agent analyzing", "resourceId", infra.ResourceID)
 
@@ -60,7 +60,7 @@ func SecurityAgentActivity(ctx context.Context, infra InfrastructureResult) (Age
 
 	score := 85.0 + rand.Float64()*10.0 // Score between 85-95
 
-	result := AgentResult{
+	result := types.AgentResult{
 		AgentID:      "security-agent-001",
 		AgentType:    "Security",
 		Status:       "Completed",
@@ -81,7 +81,7 @@ func SecurityAgentActivity(ctx context.Context, infra InfrastructureResult) (Age
 	return result, nil
 }
 
-func ComplianceAgentActivity(ctx context.Context, infra InfrastructureResult) (AgentResult, error) {
+func ComplianceAgentActivity(ctx context.Context, infra types.InfrastructureResult) (types.AgentResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Compliance agent analyzing", "resourceId", infra.ResourceID)
 
@@ -94,7 +94,7 @@ func ComplianceAgentActivity(ctx context.Context, infra InfrastructureResult) (A
 
 	score := 88.0 + rand.Float64()*8.0 // Score between 88-96
 
-	result := AgentResult{
+	result := types.AgentResult{
 		AgentID:      "compliance-agent-001",
 		AgentType:    "Compliance",
 		Status:       "Completed",
@@ -115,7 +115,7 @@ func ComplianceAgentActivity(ctx context.Context, infra InfrastructureResult) (A
 	return result, nil
 }
 
-func CostOptimizationAgentActivity(ctx context.Context, infra InfrastructureResult) (AgentResult, error) {
+func CostOptimizationAgentActivity(ctx context.Context, infra types.InfrastructureResult) (types.AgentResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Cost optimization agent analyzing", "resourceId", infra.ResourceID)
 
@@ -128,7 +128,7 @@ func CostOptimizationAgentActivity(ctx context.Context, infra InfrastructureResu
 
 	score := 75.0 + rand.Float64()*15.0 // Score between 75-90
 
-	result := AgentResult{
+	result := types.AgentResult{
 		AgentID:      "cost-agent-001",
 		AgentType:    "CostOptimization",
 		Status:       "Completed",
@@ -151,7 +151,7 @@ func CostOptimizationAgentActivity(ctx context.Context, infra InfrastructureResu
 
 // Result Aggregation Activities
 
-func AggregateAgentResultsActivity(ctx context.Context, results []AgentResult) (AggregatedResult, error) {
+func AggregateAgentResultsActivity(ctx context.Context, results []types.AgentResult) (types.AggregatedResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Aggregating agent results", "agentCount", len(results))
 
@@ -182,7 +182,7 @@ func AggregateAgentResultsActivity(ctx context.Context, results []AgentResult) (
 		summary += "All checks passed successfully."
 	}
 
-	result := AggregatedResult{
+	result := types.AggregatedResult{
 		OverallScore:        overallScore,
 		AgentResults:        results,
 		RequiresHumanReview: requiresHumanReview,
@@ -193,17 +193,17 @@ func AggregateAgentResultsActivity(ctx context.Context, results []AgentResult) (
 	return result, nil
 }
 
-func GenerateComplianceReportActivity(ctx context.Context, aggregated AggregatedResult) (ComplianceReport, error) {
+func GenerateComplianceReportActivity(ctx context.Context, aggregated types.AggregatedResult) (types.ComplianceReport, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Generating compliance report")
 
-	report := ComplianceReport{
+	report := types.ComplianceReport{
 		ID:             fmt.Sprintf("report-%d", time.Now().Unix()),
 		TargetResource: "infrastructure-scan",
 		OverallStatus:  "Completed",
 		Score:          aggregated.OverallScore,
 		AgentResults:   aggregated.AgentResults,
-		RiskAssessment: RiskAssessment{
+		RiskAssessment: types.RiskAssessment{
 			Level:         aggregated.RiskLevel,
 			CriticalItems: []string{},
 			WarningItems:  []string{},
@@ -236,7 +236,7 @@ func GenerateComplianceReportActivity(ctx context.Context, aggregated Aggregated
 
 // Human-in-the-Loop Activities
 
-func HumanReviewActivity(ctx context.Context, aggregated AggregatedResult) (HumanReviewResult, error) {
+func HumanReviewActivity(ctx context.Context, aggregated types.AggregatedResult) (types.HumanReviewResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Waiting for human review")
 
@@ -259,7 +259,7 @@ func HumanReviewActivity(ctx context.Context, aggregated AggregatedResult) (Huma
 		decision = "Requires manual review: Compliance score below threshold"
 	}
 
-	result := HumanReviewResult{
+	result := types.HumanReviewResult{
 		ReviewerID: "system-auto-review",
 		Approved:   approved,
 		Decision:   decision,
@@ -272,12 +272,12 @@ func HumanReviewActivity(ctx context.Context, aggregated AggregatedResult) (Huma
 
 // Multi-Agent Collaboration Activities
 
-func PrimaryAgentActivity(ctx context.Context, request CollaborationRequest) (AgentResult, error) {
+func PrimaryAgentActivity(ctx context.Context, request types.CollaborationRequest) (types.AgentResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Primary agent executing", "agentType", request.PrimaryAgent)
 
 	// Simulate primary agent analysis
-	result := AgentResult{
+	result := types.AgentResult{
 		AgentID:      fmt.Sprintf("primary-%s", request.PrimaryAgent),
 		AgentType:    request.PrimaryAgent,
 		Status:       "Completed",
@@ -294,7 +294,7 @@ func PrimaryAgentActivity(ctx context.Context, request CollaborationRequest) (Ag
 	return result, nil
 }
 
-func ValidationAgentActivity(ctx context.Context, agentType string, primaryResult AgentResult) (AgentResult, error) {
+func ValidationAgentActivity(ctx context.Context, agentType string, primaryResult types.AgentResult) (types.AgentResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Validation agent executing", "agentType", agentType)
 
@@ -305,7 +305,7 @@ func ValidationAgentActivity(ctx context.Context, agentType string, primaryResul
 		score = score - (rand.Float64() * 15.0) // Reduce score if disagreeing
 	}
 
-	result := AgentResult{
+	result := types.AgentResult{
 		AgentID:      fmt.Sprintf("validator-%s", agentType),
 		AgentType:    agentType,
 		Status:       "Completed",
@@ -322,7 +322,7 @@ func ValidationAgentActivity(ctx context.Context, agentType string, primaryResul
 	return result, nil
 }
 
-func BuildConsensusActivity(ctx context.Context, primary AgentResult, validations []AgentResult) (ConsensusResult, error) {
+func BuildConsensusActivity(ctx context.Context, primary types.AgentResult, validations []types.AgentResult) (types.ConsensusResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Building consensus from agent results")
 
@@ -345,7 +345,7 @@ func BuildConsensusActivity(ctx context.Context, primary AgentResult, validation
 		consensusLevel = "Partial"
 	}
 
-	result := ConsensusResult{
+	result := types.ConsensusResult{
 		ConsensusLevel:    consensusLevel,
 		AgreementScore:    agreementScore,
 		ConflictingItems:  []string{},
@@ -367,7 +367,7 @@ func BuildConsensusActivity(ctx context.Context, primary AgentResult, validation
 	return result, nil
 }
 
-func GenerateFinalRecommendationActivity(ctx context.Context, consensus ConsensusResult) (CollaborationResult, error) {
+func GenerateFinalRecommendationActivity(ctx context.Context, consensus types.ConsensusResult) (types.CollaborationResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Generating final recommendation")
 
@@ -381,12 +381,12 @@ func GenerateFinalRecommendationActivity(ctx context.Context, consensus Consensu
 		recommendation = "Proceed with caution and additional monitoring"
 	}
 
-	result := CollaborationResult{
+	result := types.CollaborationResult{
 		TaskID:          fmt.Sprintf("collab-%d", time.Now().Unix()),
 		ConsensusResult: consensus,
 		Recommendation:  recommendation,
 		Confidence:      confidence,
-		AgentResults:    []AgentResult{}, // Would be populated in real implementation
+		AgentResults:    []types.AgentResult{}, // Would be populated in real implementation
 		Metadata: map[string]interface{}{
 			"consensusTime": "45s",
 			"agentsInvolved": 3,
