@@ -10,15 +10,11 @@ const app = createApp({
   },
 });
 
-const AppProvider = app.getProvider();
-
-const App = () => (
-  <AppProvider>
-    <FlatRoutes>
-      <Route path="/" element={<div><h1>Welcome to Backstage + Temporal Sandbox</h1><p>Navigate to <a href="/temporal">/temporal</a> for workflow management</p></div>} />
-      <Route path="/temporal" element={<TemporalPage />} />
-    </FlatRoutes>
-  </AppProvider>
+const App = app.createRoot(
+  <FlatRoutes>
+    <Route path="/" element={<div><h1>Welcome to Backstage + Temporal Sandbox</h1><p>Navigate to <a href="/temporal">/temporal</a> for workflow management</p></div>} />
+    <Route path="/temporal" element={<TemporalPage />} />
+  </FlatRoutes>
 );
 
 export default App;
