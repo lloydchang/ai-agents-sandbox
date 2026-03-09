@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography, Box, Tabs, Tab } from '@mui/material';
 import AIAgentWorkflowBuilder from './AIAgentWorkflowBuilder';
 import MonitoringDashboard from './MonitoringDashboard';
+import HumanInTheLoopApprovals from './HumanInTheLoopApprovals';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -88,6 +89,7 @@ const TemporalPage = () => {
           <Tab label="AI Agent Builder" />
           <Tab label="Monitoring Dashboard" />
           <Tab label="Compliance Workflows" />
+          <Tab label="Human Approvals" />
         </Tabs>
       </Box>
 
@@ -157,6 +159,10 @@ const TemporalPage = () => {
             ))}
           </TableBody>
         </Table>
+      </TabPanel>
+
+      <TabPanel value={tabValue} index={4}>
+        <HumanInTheLoopApprovals />
       </TabPanel>
     </div>
   );
