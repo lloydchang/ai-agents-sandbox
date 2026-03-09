@@ -14,6 +14,22 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+// CORS middleware
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func HelloBackstageWorkflow(ctx workflow.Context, name string) (string, error) {
 	options := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute,
@@ -71,6 +87,10 @@ func main() {
 
 	// HTTP server for endpoints
 	r := mux.NewRouter()
+	
+	// Apply CORS middleware
+	r.Use(corsMiddleware)
+	
 	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {
 		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
 			ID:        "backstage-workflow-" + time.Now().Format("20060102150405"),
