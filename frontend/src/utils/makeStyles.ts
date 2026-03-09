@@ -102,14 +102,14 @@
   };
   
   // Also patch React's safelyCallDestroy function
-  if (typeof window !== 'undefined' && window.ReactDOM) {
-    const originalSafelyCallDestroy = window.ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.safelyCallDestroy;
+  if (typeof window !== 'undefined' && (window as any).ReactDOM) {
+    const originalSafelyCallDestroy = (window as any).ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.safelyCallDestroy;
     if (originalSafelyCallDestroy) {
-      window.ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.safelyCallDestroy = function(...args) {
+      (window as any).ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.safelyCallDestroy = function(...args: any[]) {
         try {
           return originalSafelyCallDestroy.apply(this, args);
-      } catch (error: any) {
-        if (error && error.message && error.message.includes('refs')) {
+        } catch (error: any) {
+          if (error && error.message && error.message.includes('refs')) {
             return; // Silently ignore
           }
           throw error;
@@ -119,18 +119,18 @@
   }
 
   // Patch React.useLayoutEffect to wrap cleanup functions
-  if (typeof window !== 'undefined' && window.React) {
-    const originalUseLayoutEffect = window.React.useLayoutEffect;
+  if (typeof window !== 'undefined' && (window as any).React) {
+    const originalUseLayoutEffect = (window as any).React.useLayoutEffect;
     if (originalUseLayoutEffect) {
-      window.React.useLayoutEffect = function(effect, deps) {
+      (window as any).React.useLayoutEffect = function(effect, deps) {
         const patchedEffect = function() {
           const result = effect();
           if (typeof result === 'function') {
             // It's a cleanup function
-            return function() {
+            return function(...args: any[]) {
               try {
                 result();
-              } catch (error) {
+              } catch (error: any) {
                 if (error && error.message && error.message.includes('refs')) {
                   // Silently handle the refs error
                   return;
