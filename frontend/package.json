@@ -50,7 +50,8 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=--no-deprecation backstage-cli package start",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation npm run dev",
+    "dev": "backstage-cli package start",
     "build": "backstage-cli build",
     "tsc": "tsc",
     "test": "backstage-cli test",
