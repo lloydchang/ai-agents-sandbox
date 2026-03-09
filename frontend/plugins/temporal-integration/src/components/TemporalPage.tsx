@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@material-ui/core';
 
 const TemporalPage = () => {
-  const [workflows, setWorkflows] = useState([]);
+  const [workflows, setWorkflows] = useState<{id: string, status: string}[]>([]);
 
   const startWorkflow = async () => {
     try {
@@ -14,7 +14,7 @@ const TemporalPage = () => {
     }
   };
 
-  const checkStatus = async (id) => {
+  const checkStatus = async (id: string) => {
     try {
       const response = await fetch(`http://localhost:8081/workflow/status?id=${id}`);
       const status = await response.text();
