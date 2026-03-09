@@ -152,11 +152,11 @@ This sandbox is designed for experimentation and can be extended with:
 
 ## Open-source software
 
-https://github.com/lloydchang/backstage-temporal
+https://github.com/lloydchang/sandbox-backstage-temporal
 
 ---
 
 ## License
 
-[GNU Affero General Public License v3.0 or later](https://github.com/lloydchang/backstage-temporal/blob/main/LICENSE)
+[GNU Affero General Public License v3.0 or later](https://github.com/lloydchang/sandbox-backstage-temporal/blob/main/LICENSE)
 
