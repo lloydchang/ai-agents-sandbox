@@ -22,6 +22,7 @@ import (
 	"github.com/lloydchang/ai-agents-sandbox/backend/humanloop"
 	"github.com/lloydchang/ai-agents-sandbox/backend/monitoring"
 	"github.com/lloydchang/ai-agents-sandbox/backend/performance"
+	"github.com/lloydchang/ai-agents-sandbox/backend/ragai"
 	"github.com/lloydchang/ai-agents-sandbox/backend/security"
 	"github.com/lloydchang/ai-agents-sandbox/backend/skills"
 	"github.com/lloydchang/ai-agents-sandbox/backend/types"
@@ -228,6 +229,7 @@ func main() {
 	// w.RegisterWorkflow(workflows.EnhancedWorkflowMetricsWorkflow) // Function doesn't exist
 	w.RegisterWorkflow(workflows.ConversationalAgentWorkflow)
 	w.RegisterWorkflow(workflows.GoalBasedAgentWorkflow)
+	w.RegisterWorkflow(workflows.ReActAgentWorkflow)
 	w.RegisterWorkflow(humanloop.EnhancedHumanInTheLoopWorkflow)
 	w.RegisterWorkflow(performance.OptimizedWorkflow)
 	w.RegisterWorkflow(performance.PerformanceMonitoringWorkflow)
@@ -254,6 +256,13 @@ func main() {
 	w.RegisterActivity(activities.ListCategoriesActivity)
 	w.RegisterActivity(activities.AnalyzeToolUsageActivity)
 	w.RegisterActivity(activities.ValidateToolParametersActivity)
+	
+	// Register ReAct agent activities
+	w.RegisterActivity(activities.GenerateReActThoughtActivity)
+	w.RegisterActivity(activities.GenerateReActActionActivity)
+	w.RegisterActivity(activities.GenerateReActObservationActivity)
+	w.RegisterActivity(activities.AnalyzeReActPerformanceActivity)
+	w.RegisterActivity(activities.ValidateReActStepActivity)
 
 	// Register monitoring activities
 	w.RegisterActivity(monitoring.RecordWorkflowMetricsActivity)
@@ -297,8 +306,14 @@ func main() {
 	// Apply CORS middleware
 	r.Use(corsMiddleware)
 
+	// Initialize RAG AI handler
+	ragAIHandler := ragai.NewRagAIHandler()
+	
 	// Register skill service routes
 	skillService.RegisterRoutes(r)
+	
+	// Register RAG AI routes
+	ragAIHandler.RegisterRoutes(r.PathPrefix("/api/rag-ai").Subrouter())
 
 	// Add explicit OPTIONS handlers for CORS preflight
 	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {
@@ -856,6 +871,92 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(toolCall)
 	}).Methods("POST")
+
+	// ReAct agent endpoints
+	r.HandleFunc("/agent/react/start", func(w http.ResponseWriter, r *http.Request) {
+		var request workflows.ReActAgentRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// Set default values
+		if request.MaxSteps == 0 {
+			request.MaxSteps = 10
+		}
+		if request.LLMProvider == "" {
+			request.LLMProvider = "openai"
+		}
+		if request.LLMModel == "" {
+			request.LLMModel = "gpt-4"
+		}
+		if request.Context == nil {
+			request.Context = make(map[string]interface{})
+		}
+
+		// Start ReAct agent workflow
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        fmt.Sprintf("react-agent-%d", time.Now().Unix()),
+			TaskQueue: "ai-agent-task-queue",
+		}, workflows.ReActAgentWorkflow, request)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]interface{}{
+			"workflowId": we.GetID(),
+			"runId":      we.GetRunID(),
+			"status":     "started",
+			"query":      request.Query,
+			"maxSteps":   request.MaxSteps,
+			"startedAt":  time.Now().Format(time.RFC3339),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}).Methods("POST")
+
+	r.HandleFunc("/agent/react/{workflowId}/status", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		workflowID := vars["workflowId"]
+		includeSteps := r.URL.Query().Get("includeSteps") == "true"
+
+		// Query ReAct agent state
+		response, err := c.QueryWorkflow(context.Background(), workflowID, "", "GetReActAgentStateQuery")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var state workflows.ReActAgentState
+		if err := response.Get(&state); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		result := map[string]interface{}{
+			"workflowId":   workflowID,
+			"query":        state.Query,
+			"currentStep":  state.CurrentStep,
+			"maxSteps":     state.MaxSteps,
+			"status":       state.Status,
+			"result":       state.Result,
+			"startTime":    state.StartTime.Format(time.RFC3339),
+			"endTime":      state.EndTime.Format(time.RFC3339),
+			"llmProvider":  state.LLMProvider,
+			"llmModel":     state.LLMModel,
+			"toolsUsed":    state.ToolsUsed,
+		}
+
+		if includeSteps {
+			result["steps"] = state.Steps
+			result["context"] = state.Context
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}).Methods("GET")
 
 	log.Printf("Starting enhanced HTTP server on :8081")
 	log.Fatal(http.ListenAndServe(":8081", r))
