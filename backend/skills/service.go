@@ -35,10 +35,13 @@ func (sm *SkillManager) initializeSkillDiscovery(workingDir string) {
 	// 1. Enterprise skills (if applicable)
 	// This would typically come from managed settings
 
-	// 2. Personal skills (~/.agents/skills)
+	// 2. Personal skills (~/.agents/skills and ~/.claude/skills)
 	if homeDir, err := os.UserHomeDir(); err == nil {
 		personalSkillsDir := filepath.Join(homeDir, ".agents", "skills")
 		sm.AddSkillDir(personalSkillsDir, "user", 20)
+		
+		claudeSkillsDir := filepath.Join(homeDir, ".claude", "skills")
+		sm.AddSkillDir(claudeSkillsDir, "claude-user", 20)
 	}
 
 	// 3. Project skills (.agents/skills from current directory up to repo root)
@@ -62,6 +65,16 @@ func (sm *SkillManager) discoverProjectSkills(startDir string) {
 				priority = 15 // Higher priority for repo root
 			}
 			sm.AddSkillDir(skillDir, "repo", priority)
+		}
+
+		// Check for .claude/skills in current directory (additional support)
+		claudeSkillDir := filepath.Join(currentDir, ".claude", "skills")
+		if _, err := os.Stat(claudeSkillDir); err == nil {
+			priority := 10 // Default project priority
+			if repoRootFound {
+				priority = 15 // Higher priority for repo root
+			}
+			sm.AddSkillDir(claudeSkillDir, "claude", priority)
 		}
 
 		// Check if this is a git repository root
