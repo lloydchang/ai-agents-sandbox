@@ -1,6 +1,6 @@
-# Claude Skills
+# Agent Skills
 
-This directory contains Claude-style skills for the AI Agents Sandbox. These skills follow the Claude skills specification and can be invoked using slash commands (e.g., `/skill-name`).
+This directory contains skills for the AI Agents Sandbox. These skills follow the skills specification and can be invoked using slash commands (e.g., `/skill-name`).
 
 ## Available Skills
 
@@ -228,7 +228,7 @@ Comprehensive error handling includes:
 
 1. Create skill directory:
 ```bash
-mkdir -p .claude/skills/new-skill
+mkdir -p .agents/skills/new-skill
 ```
 
 2. Create SKILL.md with frontmatter
@@ -310,7 +310,7 @@ Skills can integrate with:
 /echo "Testing skill parsing"
 
 # Check tool access
-/ls -la .claude/skills/
+/ls -la .agents/skills/
 
 # Validate skill syntax
 # Check SKILL.md frontmatter formatting
@@ -333,16 +333,16 @@ Skills can integrate with:
 - Track parameter values
 - Monitor for abuse patterns
 
-## OpenAI Codex Skills Integration
+## Skills Integration
 
-This section documents the OpenAI Codex-style skills that have been integrated into the Claude skills framework. These skills follow the OpenAI Codex skills specification and can be invoked using the `$` prefix or through the `/skills` command.
+Skills can be invoked using the `$` prefix or through the `/skills` command.
 
-### Available OpenAI Codex Skills
+### Available Skills
 
 #### 🔄 temporal-workflow
 Manage and monitor Temporal workflows with AI agent orchestration.
 
-**Codex Usage:**
+**Usage:**
 ```bash
 $temporal-workflow
 ```
@@ -362,7 +362,7 @@ $temporal-workflow
 #### 📋 backstage-catalog
 Manage Backstage software catalog and components.
 
-**Codex Usage:**
+**Usage:**
 ```bash
 $backstage-catalog
 ```
@@ -382,7 +382,7 @@ $backstage-catalog
 #### 🤖 ai-agent-orchestration
 Orchestrate AI agents and manage agent workflows.
 
-**Codex Usage:**
+**Usage:**
 ```bash
 $ai-agent-orchestration
 ```
@@ -400,7 +400,7 @@ $ai-agent-orchestration
 #### 🔍 compliance-check
 Perform automated compliance checks and policy validation.
 
-**Codex Usage:**
+**Usage:**
 ```bash
 $compliance-check
 ```
@@ -418,7 +418,7 @@ $compliance-check
 #### 💰 cost-optimization
 Optimize resource costs and spending across infrastructure.
 
-**Codex Usage:**
+**Usage:**
 ```bash
 $cost-optimization
 ```
@@ -433,10 +433,10 @@ $cost-optimization
 - `SKILL.md` - Main skill instructions
 - `agents/openai.yaml` - UI configuration and dependencies
 
-### OpenAI Codex Configuration
+### Configuration
 
 #### agents/openai.yaml Structure
-Each integrated OpenAI Codex skill includes an `agents/openai.yaml` configuration file that defines:
+Each integrated skill includes an `agents/openai.yaml` configuration file that defines:
 
 ```yaml
 interface:
@@ -459,9 +459,9 @@ dependencies:
       url: "http://localhost:PORT"
 ```
 
-### OpenAI Codex Skill Development
+### Skill Development
 
-#### Creating New OpenAI Codex Skills
+#### Creating New Skills
 
 1. Create skill directory:
 ```bash
@@ -481,7 +481,7 @@ description: What this skill does and when to use it
 3. Create agents/openai.yaml for UI configuration
 4. Add examples and supporting files as needed
 
-#### OpenAI Codex Skill Structure
+#### Skill Structure
 ```
 skill-name/
 ├── SKILL.md                    # Main skill instructions (required)
@@ -493,21 +493,21 @@ skill-name/
 └── assets/                     # Icons and images (optional)
 ```
 
-### OpenAI Codex Integration
+### Integration
 
 #### Temporal Integration
-OpenAI Codex skills integrate with Temporal workflows through:
+skills integrate with Temporal workflows through:
 - Workflow definitions in `backend/workflows/`
 - Activity implementations in `backend/activities/`
 - API endpoints at `http://localhost:8081`
 
 #### Backstage Integration
-OpenAI Codex skills connect to Backstage through:
+skills connect to Backstage through:
 - Catalog entities in `catalog-info.yaml` files
 - App configuration in `frontend/app-config.yaml`
 - Plugin integrations in `frontend/plugins/`
 
-### OpenAI Codex Best Practices
+### Best Practices
 
 1. **Clear Descriptions**: Write detailed skill descriptions for implicit invocation
 2. **Structured Content**: Use clear sections and code examples
@@ -516,10 +516,10 @@ OpenAI Codex skills connect to Backstage through:
 5. **Examples**: Provide practical usage examples
 6. **Testing**: Include validation and testing procedures
 
-### OpenAI Codex Troubleshooting
+### Troubleshooting
 
 #### Skill Not Detected
-- Restart Codex after adding new skills
+- Restart after adding new skills
 - Check SKILL.md syntax
 - Verify directory structure
 
