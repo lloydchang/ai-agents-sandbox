@@ -14,23 +14,6 @@
 - **Human-in-the-Loop Controls** - Critical decisions require human approval
 - **Multiple Interfaces** - REST APIs, CLI, WebMCP, and direct AI assistant integration
 
-## 🎯 Repository Integration
-
-Successfully integrated an AI agent ecosystem:
-
-### Phase 1 (High Priority) - 3/3 Complete ✅
-1. **MCP Tool Support** (temporal-ai-agent) - Goal-based agents, multi-agent workflows
-2. **RAG AI Plugin Suite** (roadie-backstage-plugins) - Interactive chat, source attribution
-3. **ReAct Patterns** (durable-react-agent-gemini) - Structured reasoning, thought-action-observation
-
-### Phase 2 (Medium Priority) - 4/4 Complete ✅
-4. **Research Workflows** (ai-iceberg-demo) - Multi-agent analysis, knowledge graphs
-5. **AWS Bedrock Integration** (aws-samples) - Claude, Titan, Jurassic models
-6. **WebSocket Real-Time Updates** (gorilla/websocket) - Live monitoring, event streaming
-7. **Multi-Model AI** (spring-projects/spring-ai) - Intelligent selection, ensemble methods
-
-**Results:** 100% integration success rate, 35+ activities, 25+ API endpoints, production-ready architecture.
-
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -69,7 +52,7 @@ python3 eval/run_evals.py
 ```
 
 **What these do:**
-- **`bootstrap.sh`** - Validates prerequisites, checks all 28 skills exist, ensures environment readiness
+- **`bootstrap.sh`** - Validates prerequisites, checks skills exist, ensures environment readiness
 - **`run_evals.py`** - Tests skill definitions, validates SKILL.md formats, checks trigger phrases
 - **`./scripts/dev.sh`** - Starts all services (Temporal, PostgreSQL, backend, frontend)
 
@@ -90,7 +73,7 @@ Comprehensive documentation is organized in the [`docs/`](./docs/) directory:
 
 ### 🏃‍♂️ [User Guide](./docs/user-guide/)
 - **[Getting Started](./docs/user-guide/getting-started.md)** - Setup and basic usage
-- **[Skills Reference](./docs/user-guide/skills-reference.md)** - All 28 skills and workflows
+- **[Skills Reference](./docs/user-guide/skills-reference.md)** - All skills and workflows
 - **[Troubleshooting](./docs/user-guide/troubleshooting.md)** - Common issues and solutions
 
 ### 🛠️ [Developer Guide](./docs/developer-guide/)
@@ -118,7 +101,7 @@ Comprehensive documentation is organized in the [`docs/`](./docs/) directory:
 - **Multi-Interface Support** - REST APIs, MCP server, CLI, WebMCP client, Backstage GUI
 
 ### Enterprise Ready
-- **Comprehensive Skills** - 28 skills covering infrastructure, operations, security, compliance
+- **Comprehensive Skills** - Various Skills
 - **Multi-Agent Coordination** - Parallel and sequential agent execution
 - **Audit Trails** - Complete logging and compliance reporting
 - **Production Architecture** - Dockerized deployment and monitoring
@@ -152,8 +135,8 @@ See **[Extending](./docs/developer-guide/extending.md)** for detailed contributi
 
 ## 📋 Example Use Cases
 
-- **Tenant Onboarding**: "Onboard enterprise customer in Azure East US"
-- **Compliance Automation**: Weekly SOC2 scans across all infrastructure
+- **Team Onboarding**: "Onboard team in GCP Iowa"
+- **Compliance Automation**: Weekly compliance scans across all infrastructure
 - **Incident Response**: "P0/P1 — service returning 503s"
 - **Cost Optimization**: Monthly cloud spend analysis and recommendations
 - **Security Monitoring**: Real-time vulnerability scanning and alerting
@@ -200,7 +183,7 @@ Both "AI Agents Sandbox" (a sandbox for agents) and "AI Agent's Sandbox" (the ag
 Backstage Frontend (TypeScript)
     │
     ▼
-[ AI Assistants ] (Claude / Codex / GPT)
+[ AI Assistants ] (Claude / Codex / etc.)
     │
     ▼
 [ Coordination Layer ] (AGENTS.md & SKILL.md rules)
@@ -225,18 +208,18 @@ Temporal Server <──> PostgreSQL (Durable State & Workflows)
 
 ---
 
-## The Laboratory Concept
+## The Sandbox Concept
 
-This is not a production-ready framework — it is a bleeding-edge testbed. Use this repository to experiment with:
+This is not a production-ready framework — it is a testbed. Use this repository to experiment with:
 
 - **The Coordination Layer** — Define agent behaviors via `AGENTS.md` and structured `SKILL.md` schemas
 - **Interface Interoperability** — Test how the same Skill behaves across CLI, REST API, WebMCP, and Backstage GUI
 - **Tool Boundaries** — Push the limits of what agents can safely do using isolated execution configs that define the blast radius for every agent action
-- **Multi-Agent Orchestration** — Run Security, Compliance, and Cost Optimization agents in parallel, with consensus-building and human-in-the-loop escalation
+- **Multi-Agent Orchestration** — Run agents in parallel, with consensus-building and human-in-the-loop escalation
 
 ---
 
-## Key Features
+## Possible Approaches
 
 **The Sandbox (Safe Execution)**
 - *Infrastructure Emulation* — Run compliance and security scans against simulated AWS, Azure, and GCP resources without touching your actual cloud accounts
@@ -326,7 +309,7 @@ From there, the sandbox scales up to multi-agent orchestration, compliance autom
 # Skill management
 ./cli skill list
 ./cli skill info compliance-check
-./cli skill invoke /compliance-check vm-web-server-001 SOC2 high
+./cli skill invoke /compliance-check vm-web-server-001 ISO high
 
 # Workflow management
 ./cli workflow start ai-orchestration
@@ -390,7 +373,7 @@ The MCP server exposes standardized tools so local AI assistants (e.g., Claude D
 
 **Security Agent** — Vulnerability scanning, threat detection, security posture analysis, access control validation.
 
-**Compliance Agent** — SOC2/GDPR/HIPAA validation, control assessment, gap analysis, audit trail generation.
+**Compliance Agent** — SOC2/ISO/HIPAA validation, control assessment, gap analysis, audit trail generation.
 
 **Cost Optimization Agent** — Resource utilization analysis, right-sizing suggestions, reserved instance analysis.
 
@@ -548,7 +531,7 @@ This sandbox is built for safe, bleeding-edge experimentation. Contributions are
 
 **Advanced Orchestration** — New multi-agent collaboration patterns, additional cloud providers in the infrastructure emulator, or multi-cloud hooks (AWS Proton, Azure Foundry).
 
-**Compliance Frameworks** — Additional regulatory standards beyond SOC2/GDPR/HIPAA and new validation rules.
+**Compliance Frameworks** — Additional regulatory standards beyond SOC2/ISO/HIPAA and new validation rules.
 
 ---
 
