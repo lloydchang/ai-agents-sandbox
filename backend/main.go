@@ -22,6 +22,7 @@ import (
 	"github.com/lloydchang/backstage-temporal/backend/monitoring"
 	"github.com/lloydchang/backstage-temporal/backend/performance"
 	"github.com/lloydchang/backstage-temporal/backend/security"
+	"github.com/lloydchang/backstage-temporal/backend/skills"
 	"github.com/lloydchang/backstage-temporal/backend/types"
 	"github.com/lloydchang/backstage-temporal/backend/workflows"
 )
@@ -189,6 +190,10 @@ func main() {
 	emulator := emulators.GetGlobalEmulator()
 	log.Printf("Infrastructure emulator initialized")
 
+	// Initialize skills service
+	skillService := skills.NewSkillService(".", "session-"+time.Now().Format("20060102150405"))
+	log.Printf("Skills service initialized with %d skills", len(skillService.GetManager().ListSkills()))
+
 	// Initialize monitoring system
 	metricsCollector := monitoring.GetGlobalMetricsCollector()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -274,6 +279,9 @@ func main() {
 
 	// Apply CORS middleware
 	r.Use(corsMiddleware)
+
+	// Register skill service routes
+	skillService.RegisterRoutes(r)
 
 	// Add explicit OPTIONS handlers for CORS preflight
 	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {

@@ -6,6 +6,7 @@ import './utils/makeStyles'; // Import the monkey patch
 import { TemporalIntegrationPage } from './plugins/temporal-integration/index';
 import { SplitScreenPage } from './components/SplitScreenPage';
 import { SplitScreenLandingPage } from './components/SplitScreenLandingPage';
+import SkillsManagement from './components/SkillsManagement';
 
 // Import catalog plugin
 import { CatalogEntityPage, CatalogIndexPage } from '@backstage/plugin-catalog';
@@ -27,6 +28,7 @@ const App = app.createRoot(
         <Route path="/catalog/:namespace/:kind/:name" element={<CatalogEntityPage />} />
         <Route path="/temporal" element={<TemporalIntegrationPage />} />
         <Route path="/split-screen" element={<SplitScreenPage />} />
+        <Route path="/skills" element={<SkillsManagement />} />
       </FlatRoutes>
     </BrowserRouter>
   </StylesProvider>
