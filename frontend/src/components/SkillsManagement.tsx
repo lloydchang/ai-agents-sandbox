@@ -239,7 +239,7 @@ const SkillsManagement: React.FC = () => {
             No skills available
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Skills will appear here once the backend discovers them from the .agents/skills directory.
+            Skills will appear here once the backend discovers them from the .agents/skills or .claude/skills directories.
           </Typography>
         </Box>
       )}
