@@ -72,9 +72,10 @@ PostgreSQL + Temporal Server
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Go 1.21+
-- Node.js 18+
-- Docker & Docker Compose
+- **Go 1.25+** (for backend services and Temporal workflows)
+- **Node.js 16+** (for frontend React/TypeScript application)  
+- **Docker & Docker Compose** (for infrastructure services)
+- **Make** (optional, for build automation)
 
 ### 1. Start Infrastructure
 ```bash
@@ -203,7 +204,51 @@ The MCP server provides standardized AI tool integration:
 - **Resources**: workflow_results, agent_capabilities, compliance_reports
 - **Protocol**: JSON-RPC 2.0 over WebSocket/HTTP
 
-## 📁 Repository Structure
+## � Workflow Templates
+
+The `examples/workflow-templates.yaml` file contains pre-defined templates for:
+
+- **Security Compliance Scan**: Comprehensive security and compliance validation
+- **Multi-Cloud Compliance**: Cross-cloud compliance validation
+- **Continuous Compliance Monitoring**: Automated ongoing compliance checks
+- **Incident Response Compliance**: Compliance-focused incident response
+- **Vendor Risk Assessment**: Automated vendor risk evaluation
+
+## 🤖 Agent Types
+
+### Security Agent
+- Vulnerability scanning
+- Security posture analysis
+- Threat detection
+- Access control validation
+
+### Compliance Agent
+- Regulatory standard validation (SOC2, GDPR, HIPAA)
+- Control assessment
+- Gap analysis
+- Audit trail generation
+
+### Cost Optimization Agent
+- Resource utilization analysis
+- Cost optimization recommendations
+- Right-sizing suggestions
+- Reserved instance analysis
+
+## ⚙️ Configuration
+
+### Backend Configuration
+
+Environment variables:
+- `TEMPORAL_HOST`: Temporal server address (default: localhost:7233)
+- `DB_HOST`: PostgreSQL host (default: localhost:5432)
+- `LOG_LEVEL`: Logging level (default: info)
+
+### Agent Configuration
+
+Each agent can be configured via:
+- JSON configuration files
+- Environment variables
+- Runtime parameters
 
 ```
 repo/
@@ -503,9 +548,10 @@ PostgreSQL + Temporal Server
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Go 1.21+
-- Node.js 18+
-- Docker & Docker Compose
+- **Go 1.25+** (for backend services and Temporal workflows)
+- **Node.js 16+** (for frontend React/TypeScript application)  
+- **Docker & Docker Compose** (for infrastructure services)
+- **Make** (optional, for build automation)
 
 ### 1. Start Infrastructure
 ```bash
@@ -634,7 +680,51 @@ The MCP server provides standardized AI tool integration:
 - **Resources**: workflow_results, agent_capabilities, compliance_reports
 - **Protocol**: JSON-RPC 2.0 over WebSocket/HTTP
 
-## 📁 Repository Structure
+## � Workflow Templates
+
+The `examples/workflow-templates.yaml` file contains pre-defined templates for:
+
+- **Security Compliance Scan**: Comprehensive security and compliance validation
+- **Multi-Cloud Compliance**: Cross-cloud compliance validation
+- **Continuous Compliance Monitoring**: Automated ongoing compliance checks
+- **Incident Response Compliance**: Compliance-focused incident response
+- **Vendor Risk Assessment**: Automated vendor risk evaluation
+
+## 🤖 Agent Types
+
+### Security Agent
+- Vulnerability scanning
+- Security posture analysis
+- Threat detection
+- Access control validation
+
+### Compliance Agent
+- Regulatory standard validation (SOC2, GDPR, HIPAA)
+- Control assessment
+- Gap analysis
+- Audit trail generation
+
+### Cost Optimization Agent
+- Resource utilization analysis
+- Cost optimization recommendations
+- Right-sizing suggestions
+- Reserved instance analysis
+
+## ⚙️ Configuration
+
+### Backend Configuration
+
+Environment variables:
+- `TEMPORAL_HOST`: Temporal server address (default: localhost:7233)
+- `DB_HOST`: PostgreSQL host (default: localhost:5432)
+- `LOG_LEVEL`: Logging level (default: info)
+
+### Agent Configuration
+
+Each agent can be configured via:
+- JSON configuration files
+- Environment variables
+- Runtime parameters
 
 ```
 repo/
