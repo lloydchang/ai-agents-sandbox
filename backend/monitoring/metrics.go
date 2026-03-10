@@ -8,7 +8,7 @@ import (
 
 	"go.temporal.io/sdk/activity"
 	"go.temporal.io/sdk/workflow"
-	"github.com/lloydchang/backstage-temporal/backend/types"
+	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // MetricsCollector collects and aggregates system metrics

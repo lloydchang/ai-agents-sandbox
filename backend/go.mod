@@ -1,4 +1,4 @@
-module github.com/lloydchang/backstage-temporal/backend
+module github.com/lloydchang/ai-agents-sandbox/backend
 
 go 1.25.5
 

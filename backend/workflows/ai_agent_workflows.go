@@ -5,8 +5,8 @@ import (
 
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
-	"github.com/lloydchang/backstage-temporal/backend/activities"
-	"github.com/lloydchang/backstage-temporal/backend/types"
+	"github.com/lloydchang/ai-agents-sandbox/backend/activities"
+	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // AIOrchestrationWorkflow orchestrates multiple AI agents for compliance checking

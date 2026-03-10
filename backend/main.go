@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -15,16 +16,16 @@ import (
 	"go.temporal.io/sdk/workflow"
 	
 	// Import our custom packages
-	"github.com/lloydchang/backstage-temporal/backend/activities"
-	"github.com/lloydchang/backstage-temporal/backend/config"
-	"github.com/lloydchang/backstage-temporal/backend/emulators"
-	"github.com/lloydchang/backstage-temporal/backend/humanloop"
-	"github.com/lloydchang/backstage-temporal/backend/monitoring"
-	"github.com/lloydchang/backstage-temporal/backend/performance"
-	"github.com/lloydchang/backstage-temporal/backend/security"
-	"github.com/lloydchang/backstage-temporal/backend/skills"
-	"github.com/lloydchang/backstage-temporal/backend/types"
-	"github.com/lloydchang/backstage-temporal/backend/workflows"
+	"github.com/lloydchang/ai-agents-sandbox/backend/activities"
+	"github.com/lloydchang/ai-agents-sandbox/backend/config"
+	"github.com/lloydchang/ai-agents-sandbox/backend/emulators"
+	"github.com/lloydchang/ai-agents-sandbox/backend/humanloop"
+	"github.com/lloydchang/ai-agents-sandbox/backend/monitoring"
+	"github.com/lloydchang/ai-agents-sandbox/backend/performance"
+	"github.com/lloydchang/ai-agents-sandbox/backend/security"
+	"github.com/lloydchang/ai-agents-sandbox/backend/skills"
+	"github.com/lloydchang/ai-agents-sandbox/backend/types"
+	"github.com/lloydchang/ai-agents-sandbox/backend/workflows"
 )
 
 // CORS middleware
@@ -225,6 +226,8 @@ func main() {
 	// Register enhanced workflows
 	// w.RegisterWorkflow(workflows.AIOrchestrationWorkflowV2) // Function doesn't exist
 	// w.RegisterWorkflow(workflows.EnhancedWorkflowMetricsWorkflow) // Function doesn't exist
+	w.RegisterWorkflow(workflows.ConversationalAgentWorkflow)
+	w.RegisterWorkflow(workflows.GoalBasedAgentWorkflow)
 	w.RegisterWorkflow(humanloop.EnhancedHumanInTheLoopWorkflow)
 	w.RegisterWorkflow(performance.OptimizedWorkflow)
 	w.RegisterWorkflow(performance.PerformanceMonitoringWorkflow)
@@ -237,6 +240,20 @@ func main() {
 	w.RegisterActivity(activities.AggregateAgentResultsActivityV2)
 	w.RegisterActivity(activities.GenerateComplianceReportActivityV2)
 	w.RegisterActivity(activities.HumanReviewActivityV2)
+
+	// Register conversation activities
+	w.RegisterActivity(activities.ExecuteConversationTurnActivity)
+	w.RegisterActivity(activities.GenerateConversationSummaryActivity)
+	
+	// Register MCP agent activities
+	w.RegisterActivity(activities.GenerateAgentMessageActivity)
+	w.RegisterActivity(activities.ExecuteMCPToolActivity)
+	w.RegisterActivity(activities.GenerateAgentResponseActivity)
+	w.RegisterActivity(activities.DiscoverGoalsActivity)
+	w.RegisterActivity(activities.GetToolsForGoalActivity)
+	w.RegisterActivity(activities.ListCategoriesActivity)
+	w.RegisterActivity(activities.AnalyzeToolUsageActivity)
+	w.RegisterActivity(activities.ValidateToolParametersActivity)
 
 	// Register monitoring activities
 	w.RegisterActivity(monitoring.RecordWorkflowMetricsActivity)
@@ -481,6 +498,364 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(status)
 	}).Methods("GET")
+
+	// Conversation management endpoints
+	r.HandleFunc("/conversation/start", func(w http.ResponseWriter, r *http.Request) {
+		var request workflows.ConversationRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// Set default values
+		if request.MaxTurns == 0 {
+			request.MaxTurns = 20
+		}
+		if request.LLMProvider == "" {
+			request.LLMProvider = "openai"
+		}
+		if request.LLMModel == "" {
+			request.LLMModel = "gpt-4"
+		}
+		if len(request.ToolsEnabled) == 0 {
+			request.ToolsEnabled = []string{"start_compliance_workflow", "get_infrastructure_info"}
+		}
+		if request.Context == nil {
+			request.Context = make(map[string]interface{})
+		}
+
+		// Start conversation workflow
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        fmt.Sprintf("conv-%s-%d", request.UserID, time.Now().Unix()),
+			TaskQueue: "ai-agent-task-queue",
+		}, workflows.ConversationalAgentWorkflow, request)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]interface{}{
+			"conversationId": we.GetID(),
+			"runId":          we.GetRunID(),
+			"status":         "started",
+			"userId":         request.UserID,
+			"goal":           request.Goal,
+			"startedAt":      time.Now().Format(time.RFC3339),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}).Methods("POST")
+
+	r.HandleFunc("/conversation/{conversationId}/message", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		conversationID := vars["conversationId"]
+
+		var messageReq struct {
+			Message string `json:"message"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&messageReq); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// Send signal to conversation
+		err := c.SignalWorkflow(context.Background(), conversationID, "", 
+			fmt.Sprintf("human-input-%s", conversationID), messageReq.Message)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]interface{}{
+			"conversationId": conversationID,
+			"message":        messageReq.Message,
+			"status":         "message_sent",
+			"sentAt":         time.Now().Format(time.RFC3339),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}).Methods("POST")
+
+	r.HandleFunc("/conversation/{conversationId}/status", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		conversationID := vars["conversationId"]
+		includeHistory := r.URL.Query().Get("includeHistory") == "true"
+
+		// Query conversation state
+		response, err := c.QueryWorkflow(context.Background(), conversationID, "", "GetConversationStateQuery")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var state workflows.ConversationState
+		if err := response.Get(&state); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		result := map[string]interface{}{
+			"conversationId":  state.ConversationID,
+			"sessionId":       state.SessionID,
+			"userId":          state.UserID,
+			"goal":            state.Goal,
+			"currentTurn":     state.CurrentTurn,
+			"maxTurns":        state.MaxTurns,
+			"status":          state.Status,
+			"toolsUsed":       state.ToolsUsed,
+			"startTime":       state.StartTime.Format(time.RFC3339),
+			"lastUpdateTime":  state.LastUpdateTime.Format(time.RFC3339),
+			"llmProvider":     state.LLMProvider,
+			"llmModel":        state.LLMModel,
+		}
+
+		if includeHistory {
+			result["history"] = state.History
+			result["context"] = state.Context
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}).Methods("GET")
+
+	// Goal-based agent endpoints
+	r.HandleFunc("/agent/goal/start", func(w http.ResponseWriter, r *http.Request) {
+		var request workflows.GoalBasedAgentRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// Set default values
+		if request.MaxTurns == 0 {
+			request.MaxTurns = 20
+		}
+		if request.LLMProvider == "" {
+			request.LLMProvider = "openai"
+		}
+		if request.LLMModel == "" {
+			request.LLMModel = "gpt-4"
+		}
+		if request.AgentType == "" {
+			request.AgentType = "single"
+		}
+		if request.Context == nil {
+			request.Context = make(map[string]interface{})
+		}
+
+		// Start goal-based agent workflow
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        fmt.Sprintf("goal-agent-%s-%d", request.UserID, time.Now().Unix()),
+			TaskQueue: "ai-agent-task-queue",
+		}, workflows.GoalBasedAgentWorkflow, request)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]interface{}{
+			"workflowId": we.GetID(),
+			"runId":      we.GetRunID(),
+			"status":     "started",
+			"goal":       request.Goal,
+			"agentType":  request.AgentType,
+			"startedAt":  time.Now().Format(time.RFC3339),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}).Methods("POST")
+
+	r.HandleFunc("/agent/goal/{workflowId}/message", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		workflowID := vars["workflowID"]
+
+		var messageReq struct {
+			Message string `json:"message"`
+		}
+
+		if err := json.NewDecoder(r.Body).Decode(&messageReq); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// Send signal to goal-based agent
+		err := c.SignalWorkflow(context.Background(), workflowID, "", 
+			fmt.Sprintf("human-input-%d", time.Now().Unix()), messageReq.Message)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]interface{}{
+			"workflowId": workflowID,
+			"message":    messageReq.Message,
+			"status":     "message_sent",
+			"sentAt":     time.Now().Format(time.RFC3339),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}).Methods("POST")
+
+	r.HandleFunc("/agent/goal/{workflowId}/status", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		workflowID := vars["workflowID"]
+		includeHistory := r.URL.Query().Get("includeHistory") == "true"
+
+		// Query goal-based agent state
+		response, err := c.QueryWorkflow(context.Background(), workflowID, "", "GetGoalBasedAgentStateQuery")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var state workflows.GoalBasedAgentState
+		if err := response.Get(&state); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		result := map[string]interface{}{
+			"workflowId":      workflowID,
+			"goal":            state.Goal,
+			"currentTurn":     state.CurrentTurn,
+			"maxTurns":        state.MaxTurns,
+			"status":          state.Status,
+			"toolsUsed":       state.ToolsUsed,
+			"startTime":       state.StartTime.Format(time.RFC3339),
+			"lastUpdateTime":  state.LastUpdateTime.Format(time.RFC3339),
+			"llmProvider":     state.LLMProvider,
+			"llmModel":        state.LLMModel,
+		}
+
+		if includeHistory {
+			result["conversation"] = state.Conversation
+			result["context"] = state.Context
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}).Methods("GET")
+
+	// MCP management endpoints
+	r.HandleFunc("/mcp/tools", func(w http.ResponseWriter, r *http.Request) {
+		mcpRegistry := mcp.GetGlobalMCPRegistry()
+		
+		category := r.URL.Query().Get("category")
+		goal := r.URL.Query().Get("goal")
+		priority := r.URL.Query().Get("priority")
+		
+		var tools []mcp.MCPTool
+		
+		switch {
+		case goal != "":
+			tools = mcpRegistry.GetToolsByGoal(goal)
+		case category != "":
+			tools = mcpRegistry.GetToolsByCategory(category)
+		case priority != "":
+			maxPriority := 1
+			if p, err := fmt.Sscanf(priority, "%d", &maxPriority); err == nil && p == 1 {
+				tools = mcpRegistry.GetToolsByPriority(maxPriority)
+			} else {
+				tools = mcpRegistry.ListAllTools()
+			}
+		default:
+			tools = mcpRegistry.ListAllTools()
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"tools": tools,
+			"count": len(tools),
+		})
+	}).Methods("GET")
+
+	r.HandleFunc("/mcp/goals", func(w http.ResponseWriter, r *http.Request) {
+		// This would call the DiscoverGoalsActivity
+		// For now, return mock goals
+		goals := []string{
+			"payment-processing",
+			"billing",
+			"subscription-management",
+			"data-analysis",
+			"reporting",
+			"audit",
+			"research",
+			"information-gathering",
+			"competitive-analysis",
+			"employee-management",
+			"onboarding",
+			"team-coordination",
+			"leave-management",
+			"employee-requests",
+			"travel-booking",
+			"business-travel",
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"goals": goals,
+			"count": len(goals),
+		})
+	}).Methods("GET")
+
+	r.HandleFunc("/mcp/categories", func(w http.ResponseWriter, r *http.Request) {
+		mcpRegistry := mcp.GetGlobalMCPRegistry()
+		
+		// Get unique categories from tools
+		allTools := mcpRegistry.ListAllTools()
+		categories := make(map[string]bool)
+		for _, tool := range allTools {
+			if tool.Category != "" {
+				categories[tool.Category] = true
+			}
+		}
+		
+		// Convert to slice
+		var categoryList []string
+		for category := range categories {
+			categoryList = append(categoryList, category)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"categories": categoryList,
+			"count":      len(categoryList),
+		})
+	}).Methods("GET")
+
+	r.HandleFunc("/mcp/clients", func(w http.ResponseWriter, r *http.Request) {
+		mcpRegistry := mcp.GetGlobalMCPRegistry()
+		clients := mcpRegistry.ListClients()
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"clients": clients,
+			"count":   len(clients),
+		})
+	}).Methods("GET")
+
+	r.HandleFunc("/mcp/execute", func(w http.ResponseWriter, r *http.Request) {
+		var toolCall mcp.MCPToolCall
+		if err := json.NewDecoder(r.Body).Decode(&toolCall); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		mcpRegistry := mcp.GetGlobalMCPRegistry()
+		err := mcpRegistry.ExecuteTool(context.Background(), &toolCall)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(toolCall)
+	}).Methods("POST")
 
 	log.Printf("Starting enhanced HTTP server on :8081")
 	log.Fatal(http.ListenAndServe(":8081", r))

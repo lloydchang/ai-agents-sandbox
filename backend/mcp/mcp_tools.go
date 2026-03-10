@@ -7,8 +7,8 @@ import (
 
 	"go.temporal.io/sdk/client"
 
-	"github.com/lloydchang/backstage-temporal/backend/types"
-	"github.com/lloydchang/backstage-temporal/backend/workflows"
+	"github.com/lloydchang/ai-agents-sandbox/backend/types"
+	"github.com/lloydchang/ai-agents-sandbox/backend/workflows"
 )
 
 // registerDefaultTools registers the default MCP tools
@@ -173,6 +173,100 @@ func (s *MCPServer) registerDefaultTools() {
 			},
 		},
 		Handler: s.handleGetInfrastructureInfo,
+	})
+
+	// Start Conversation Tool
+	s.RegisterTool(&MCPTool{
+		Name:        "start_conversation",
+		Description: "Start a multi-turn conversation with an AI agent",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"userId": map[string]interface{}{
+					"type":        "string",
+					"description": "User ID for the conversation",
+				},
+				"goal": map[string]interface{}{
+					"type":        "string",
+					"description": "The goal or objective of the conversation",
+				},
+				"initialInput": map[string]interface{}{
+					"type":        "string",
+					"description": "Initial input or question from the user",
+				},
+				"llmProvider": map[string]interface{}{
+					"type":        "string",
+					"description": "LLM provider to use (openai, anthropic, gemini)",
+					"enum":        []string{"openai", "anthropic", "gemini"},
+					"default":     "openai",
+				},
+				"llmModel": map[string]interface{}{
+					"type":        "string",
+					"description": "LLM model to use",
+					"default":     "gpt-4",
+				},
+				"maxTurns": map[string]interface{}{
+					"type":        "integer",
+					"description": "Maximum number of conversation turns",
+					"default":     20,
+					"minimum":     1,
+					"maximum":     50,
+				},
+				"toolsEnabled": map[string]interface{}{
+					"type":        "array",
+					"description": "List of tools to enable for this conversation",
+					"items": map[string]interface{}{
+						"type": "string",
+					},
+					"default": []string{"start_compliance_workflow", "get_infrastructure_info"},
+				},
+			},
+			"required": []string{"userId", "goal"},
+		},
+		Handler: s.handleStartConversation,
+	})
+
+	// Send Message to Conversation Tool
+	s.RegisterTool(&MCPTool{
+		Name:        "send_conversation_message",
+		Description: "Send a message to an active conversation",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"conversationId": map[string]interface{}{
+					"type":        "string",
+					"description": "The conversation ID to send message to",
+				},
+				"message": map[string]interface{}{
+					"type":        "string",
+					"description": "The message to send",
+				},
+			},
+			"required": []string{"conversationId", "message"},
+		},
+		Handler: s.handleSendConversationMessage,
+	})
+
+	// Get Conversation Status Tool
+	s.RegisterTool(&MCPTool{
+		Name:        "get_conversation_status",
+		Description: "Get the status and details of a conversation",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"conversationId": map[string]interface{}{
+					"type":        "string",
+					"description": "The conversation ID to check",
+				},
+				"includeHistory": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Include conversation history in response",
+					"default":     false,
+				},
+			},
+			"required": []string{"conversationId"},
+		},
+		Handler: s.handleGetConversationStatus,
 	})
 }
 
@@ -474,4 +568,153 @@ func (s *MCPServer) handleGetInfrastructureInfo(ctx context.Context, params map[
 	}
 
 	return infrastructure, nil
+}
+
+// handleStartConversation handles starting a new conversation
+func (s *MCPServer) handleStartConversation(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error) {
+	userId, ok := params["userId"].(string)
+	if !ok {
+		return nil, fmt.Errorf("userId is required")
+	}
+
+	goal, ok := params["goal"].(string)
+	if !ok {
+		return nil, fmt.Errorf("goal is required")
+	}
+
+	initialInput, _ := params["initialInput"].(string)
+	llmProvider, _ := params["llmProvider"].(string)
+	if llmProvider == "" {
+		llmProvider = "openai"
+	}
+
+	llmModel, _ := params["llmModel"].(string)
+	if llmModel == "" {
+		llmModel = "gpt-4"
+	}
+
+	maxTurns, _ := params["maxTurns"].(int)
+	if maxTurns == 0 {
+		maxTurns = 20
+	}
+
+	toolsEnabledInterface, _ := params["toolsEnabled"].([]interface{})
+	toolsEnabled := make([]string, 0)
+	for _, tool := range toolsEnabledInterface {
+		if toolStr, ok := tool.(string); ok {
+			toolsEnabled = append(toolsEnabled, toolStr)
+		}
+	}
+	if len(toolsEnabled) == 0 {
+		toolsEnabled = []string{"start_compliance_workflow", "get_infrastructure_info"}
+	}
+
+	// Create conversation request
+	request := workflows.ConversationRequest{
+		UserID:       userId,
+		Goal:         goal,
+		InitialInput: initialInput,
+		LLMProvider:  llmProvider,
+		LLMModel:     llmModel,
+		MaxTurns:     maxTurns,
+		ToolsEnabled: toolsEnabled,
+		Context:      make(map[string]interface{}),
+	}
+
+	// Start the conversation workflow
+	workflowOptions := client.StartWorkflowOptions{
+		ID:        fmt.Sprintf("conv-%s-%d", userId, time.Now().Unix()),
+		TaskQueue: "ai-agent-task-queue",
+	}
+
+	we, err := s.temporalClient.ExecuteWorkflow(ctx, workflowOptions, 
+		workflows.ConversationalAgentWorkflow, request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start conversation: %w", err)
+	}
+
+	return map[string]interface{}{
+		"conversationId": we.GetID(),
+		"runId":          we.GetRunID(),
+		"status":         "started",
+		"userId":         userId,
+		"goal":           goal,
+		"llmProvider":    llmProvider,
+		"llmModel":       llmModel,
+		"maxTurns":       maxTurns,
+		"toolsEnabled":   toolsEnabled,
+		"startedAt":      time.Now().Format(time.RFC3339),
+	}, nil
+}
+
+// handleSendConversationMessage handles sending a message to an active conversation
+func (s *MCPServer) handleSendConversationMessage(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error) {
+	conversationId, ok := params["conversationId"].(string)
+	if !ok {
+		return nil, fmt.Errorf("conversationId is required")
+	}
+
+	message, ok := params["message"].(string)
+	if !ok {
+		return nil, fmt.Errorf("message is required")
+	}
+
+	// Send signal to conversation workflow
+	err := s.temporalClient.SignalWorkflow(ctx, conversationId, "", 
+		fmt.Sprintf("human-input-%s", conversationId), message)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send message to conversation: %w", err)
+	}
+
+	return map[string]interface{}{
+		"conversationId": conversationId,
+		"message":        message,
+		"status":         "message_sent",
+		"sentAt":         time.Now().Format(time.RFC3339),
+	}, nil
+}
+
+// handleGetConversationStatus handles getting conversation status
+func (s *MCPServer) handleGetConversationStatus(ctx context.Context, params map[string]interface{}) (map[string]interface{}, error) {
+	conversationId, ok := params["conversationId"].(string)
+	if !ok {
+		return nil, fmt.Errorf("conversationId is required")
+	}
+
+	includeHistory, _ := params["includeHistory"].(bool)
+
+	// Query conversation state
+	response, err := s.temporalClient.QueryWorkflow(ctx, conversationId, "", "GetConversationStateQuery")
+	if err != nil {
+		return nil, fmt.Errorf("failed to query conversation state: %w", err)
+	}
+
+	var state workflows.ConversationState
+	if err := response.Get(&state); err != nil {
+		return nil, fmt.Errorf("failed to get conversation state: %w", err)
+	}
+
+	result := map[string]interface{}{
+		"conversationId":  state.ConversationID,
+		"sessionId":       state.SessionID,
+		"userId":          state.UserID,
+		"goal":            state.Goal,
+		"currentTurn":     state.CurrentTurn,
+		"maxTurns":        state.MaxTurns,
+		"status":          state.Status,
+		"toolsUsed":       state.ToolsUsed,
+		"startTime":       state.StartTime.Format(time.RFC3339),
+		"lastUpdateTime":  state.LastUpdateTime.Format(time.RFC3339),
+		"llmProvider":     state.LLMProvider,
+		"llmModel":        state.LLMModel,
+	}
+
+	if includeHistory {
+		result["history"] = state.History
+		result["context"] = state.Context
+	} else {
+		result["historyLength"] = len(state.History)
+	}
+
+	return result, nil
 }

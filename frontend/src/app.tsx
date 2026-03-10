@@ -8,6 +8,9 @@ import { SplitScreenPage } from './components/SplitScreenPage';
 import { SplitScreenLandingPage } from './components/SplitScreenLandingPage';
 import SkillsManagement from './components/SkillsManagement';
 
+// Import RAG AI plugin
+import { RagAiPage } from './plugins/rag-ai';
+
 // Import catalog plugin
 import { CatalogEntityPage, CatalogIndexPage } from '@backstage/plugin-catalog';
 
@@ -29,6 +32,7 @@ const App = app.createRoot(
         <Route path="/temporal" element={<TemporalIntegrationPage />} />
         <Route path="/split-screen" element={<SplitScreenPage />} />
         <Route path="/skills" element={<SkillsManagement />} />
+        <Route path="/rag-ai" element={<RagAiPage />} />
       </FlatRoutes>
     </BrowserRouter>
   </StylesProvider>
