@@ -7,78 +7,195 @@
 
 🚀 **Enterprise-Grade AI Agent Platform with Complete Repository Integration** 🚀
 
-A bleeding-edge laboratory for governed AI agent orchestration, now enhanced with **7 production-ready integrations** from leading AI repositories.
+A bleeding-edge laboratory for governed AI agent orchestration, enhanced with **7 production-ready integrations** from leading AI repositories.
 
-`ai-agents-sandbox` is a comprehensive, enterprise-ready platform that has successfully integrated 7 high-value repositories to create a complete AI agent ecosystem. It serves as both a **playground for multiple AI agents** and a **secure walled garden** for experimentation.
+## What is AI Agents Sandbox?
 
-## 🎯 **NEW: Complete Repository Integration Implementation**
+`ai-agents-sandbox` is a comprehensive, enterprise-ready platform that serves as both a **playground for multiple AI agents** and a **secure walled garden** for experimentation. It provides:
 
-### ✅ **All 7 Integrations Successfully Implemented:**
+- **30 Specialized Skills** - Infrastructure provisioning, compliance scanning, cost optimization, and more
+- **Multi-Agent Orchestration** - Coordinate complex workflows
+- **Safe Execution Environment** - Isolated tool boundaries prevent unintended consequences
+- **Human-in-the-Loop Controls** - Critical decisions require human approval
+- **Multiple Interfaces** - REST APIs, CLI, WebMCP, and direct AI assistant integration
 
-#### **Phase 1 (High Priority) - 3/3 Complete**
-1. ✅ **MCP Tool Support** (temporal-ai-agent) - Goal-based agents, multi-agent workflows
-2. ✅ **RAG AI Plugin Suite** (roadie-backstage-plugins) - Interactive chat, source attribution  
-3. ✅ **ReAct Patterns** (durable-react-agent-gemini) - Structured reasoning, thought-action-observation
+## 🎯 Repository Integration
 
-#### **Phase 2 (Medium Priority) - 4/4 Complete**
-4. ✅ **Research Workflows** (ai-iceberg-demo) - Multi-agent analysis, knowledge graphs
-5. ✅ **AWS Bedrock Integration** (aws-samples) - Claude, Titan, Jurassic models
-6. ✅ **WebSocket Real-Time Updates** (gorilla/websocket) - Live monitoring, event streaming
-7. ✅ **Multi-Model AI** (spring-projects/spring-ai) - Intelligent selection, ensemble methods
+Successfully integrated **7 high-value repositories** to create a complete AI agent ecosystem:
 
-### 🏆 **Implementation Results:**
-- **100% Integration Success Rate** (7/7 repositories)
-- **35+ Activities** implemented
-- **25+ API Endpoints** created
-- **Production Ready** architecture
-- **Complete Documentation** and testing
+### Phase 1 (High Priority) - 3/3 Complete ✅
+1. **MCP Tool Support** (temporal-ai-agent) - Goal-based agents, multi-agent workflows
+2. **RAG AI Plugin Suite** (roadie-backstage-plugins) - Interactive chat, source attribution
+3. **ReAct Patterns** (durable-react-agent-gemini) - Structured reasoning, thought-action-observation
 
-## 🚀 **Quick Start**
+### Phase 2 (Medium Priority) - 4/4 Complete ✅
+4. **Research Workflows** (ai-iceberg-demo) - Multi-agent analysis, knowledge graphs
+5. **AWS Bedrock Integration** (aws-samples) - Claude, Titan, Jurassic models
+6. **WebSocket Real-Time Updates** (gorilla/websocket) - Live monitoring, event streaming
+7. **Multi-Model AI** (spring-projects/spring-ai) - Intelligent selection, ensemble methods
 
-### **Prerequisites**
-- Go 1.19+
+**Results:** 100% integration success rate, 35+ activities, 25+ API endpoints, production-ready architecture.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Go 1.25+
 - Node.js 16+
-- Docker (optional)
+- Docker & Docker Compose
 
-### **Local Development**
+### Local Development
 ```bash
-# Clone the repository
+# Clone and setup
 git clone https://github.com/lloydchang/ai-agents-sandbox.git
 cd ai-agents-sandbox
 
-# Start backend (with all integrations)
-cd backend
-go run verification_server.go
+# Start everything
+./scripts/dev.sh
 
-# Start frontend (in another terminal)
-cd frontend
-npm start
-
-# Access the platform
-# Backend API: http://localhost:8081
+# Access interfaces
 # Frontend: http://localhost:3000
-# WebSocket: ws://localhost:8081/ws
+# Backend API: http://localhost:8081
+# Temporal UI: http://localhost:8080
 ```
 
-### **Run Complete Demo**
+### Development Setup & Validation
+
+For comprehensive development and testing, run these validation steps:
+
 ```bash
-# Run the comprehensive demo
-./demo.sh
+# 1. Validate environment and skill suite integrity
+./bootstrap.sh
+
+# 2. Run skill evaluations and tests
+python3 eval/run_evals.py
+
+# 3. Start development environment
+./scripts/dev.sh
 ```
 
-### **Health Check**
+**What these do:**
+- **`bootstrap.sh`** - Validates prerequisites, checks all 28 skills exist, ensures environment readiness
+- **`run_evals.py`** - Tests skill definitions, validates SKILL.md formats, checks trigger phrases
+- **`./scripts/dev.sh`** - Starts all services (Temporal, PostgreSQL, backend, frontend)
+
+### Try It Out
 ```bash
-curl http://localhost:8081/health
+# CLI example
+./cli skill invoke /compliance-check vm-web-server-001 SOC2
+
+# REST API example
+curl -X POST http://localhost:8081/api/skills/compliance-check/execute \
+  -H "Authorization: Bearer $AI_AGENTS_API_KEY" \
+  -d '{"targetResource": "vm-web-server-001", "complianceType": "SOC2"}'
 ```
 
-## 📚 **Documentation**
+## 📚 Documentation
 
-- [📋 Repository Integration Analysis](docs/repository-integration-analysis.md)
-- [📖 Implementation Summary](docs/implementation-summary.md)
-- [🔧 Phase 2 Implementation](docs/phase2-implementation-summary.md)
-- [🎯 Final Implementation Guide](docs/final-implementation-summary.md)
-- [🚀 Deployment Guide](docs/deployment-guide.md)
-- [📡 API Reference](docs/api-reference.md)
+Comprehensive documentation is organized in the [`docs/`](./docs/) directory:
+
+### 🏃‍♂️ [User Guide](./docs/user-guide/)
+- **[Getting Started](./docs/user-guide/getting-started.md)** - Setup and basic usage
+- **[Skills Reference](./docs/user-guide/skills-reference.md)** - All 28 skills and workflows
+- **[Troubleshooting](./docs/user-guide/troubleshooting.md)** - Common issues and solutions
+
+### 🛠️ [Developer Guide](./docs/developer-guide/)
+- **[Agent Behavior](./docs/developer-guide/agent-behavior.md)** - Governance and rules
+- **[Operational Procedures](./docs/developer-guide/operational-procedures.md)** - Workflow execution
+- **[Skills API](./docs/developer-guide/skills-api.md)** - Technical skill integration
+- **[Implementation](./docs/developer-guide/implementation.md)** - Architecture and deployment
+- **[Extending](./docs/developer-guide/extending.md)** - Adding new skills and integrations
+
+### 📖 [Reference](./docs/reference/)
+- **[CLI Commands](./docs/reference/cli-commands.md)** - Complete command reference
+- **[API Reference](./docs/reference/api-reference.md)** - REST API documentation
+- **[Configuration](./docs/reference/configuration.md)** - All configuration options
+
+## 🔑 Key Features
+
+### Safe Execution Environment
+- **Infrastructure Emulation** - Test against simulated AWS, Azure, GCP resources
+- **Strict Tool Boundaries** - Configurable blast radius for every agent action
+- **Human-in-the-Loop** - Built-in workflow pauses for critical decisions
+
+### AI Agent Orchestration
+- **Durable Execution** - Temporal ensures workflows survive crashes and timeouts
+- **Skill System** - Auto-discovery of tools from `.agents/skills/` directory
+- **Multi-Interface Support** - REST APIs, MCP server, CLI, WebMCP client, Backstage GUI
+
+### Enterprise Ready
+- **Comprehensive Skills** - 28 skills covering infrastructure, operations, security, compliance
+- **Multi-Agent Coordination** - Parallel and sequential agent execution
+- **Audit Trails** - Complete logging and compliance reporting
+- **Production Architecture** - Dockerized deployment and monitoring
+
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   AI Assistants │    │   Coordination  │    │   Execution     │
+│   (Claude/GPT)  │───▶│   Layer         │───▶│   Layer         │
+│                 │    │   (AGENTS.md)   │    │   (Temporal)    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Interfaces    │    │   Skills        │    │   Data Layer    │
+│   (REST/MCP/CLI)│    │   (28 skills)   │    │   (PostgreSQL)  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+## 🤝 Contributing
+
+This sandbox is built for safe, bleeding-edge experimentation. Contributions welcome:
+
+- **New AI Skills** - Add to `.agents/skills/` with SKILL.md specifications
+- **Interface Development** - Extend WebMCP, add new integrations
+- **Advanced Orchestration** - New multi-agent collaboration patterns
+- **Compliance Frameworks** - Additional regulatory standards
+
+See **[Extending](./docs/developer-guide/extending.md)** for detailed contribution guidelines.
+
+## 📋 Example Use Cases
+
+- **Tenant Onboarding**: "Onboard enterprise customer in Azure East US"
+- **Compliance Automation**: Weekly SOC2 scans across all infrastructure
+- **Incident Response**: "P0/P1 — service returning 503s"
+- **Cost Optimization**: Monthly cloud spend analysis and recommendations
+- **Security Monitoring**: Real-time vulnerability scanning and alerting
+
+## 🛡️ Governance & Safety
+
+All agent operations follow strict governance rules defined in **[Agent Behavior](./docs/developer-guide/agent-behavior.md)**:
+
+- **Safety First**: Never execute destructive operations without approval
+- **Audit Trail**: All actions logged and traceable
+- **Human Oversight**: Critical decisions require human review
+- **Idempotency**: Operations safe to retry
+
+## 📈 Monitoring & Observability
+
+- **Temporal UI** (`http://localhost:8080`) - Deep workflow execution visibility
+- **Agent Dashboard** (`http://localhost:3000/temporal`) - Visual workflow builder
+- **Audit Trails** - Complete history of all agent actions
+- **Metrics & Logging** - Comprehensive monitoring and alerting
+
+## 🎯 Why This Name?
+
+The name "AI Agents Sandbox" deliberately carries multiple meanings:
+
+- **Sandbox**: Safe, isolated environment for experimentation
+- **Agents**: Multiple specialized AI agents working together
+- **Playground**: High-velocity testbed for bleeding-edge patterns
+
+Both "AI Agents Sandbox" (a sandbox for agents) and "AI Agent's Sandbox" (the agent's own environment) are accurate and intentional readings.
+
+## 📄 License
+
+[GNU Affero General Public License v3.0 or later](LICENSE)
+
+---
+
+**Ready to explore?** Start with **[Getting Started](./docs/user-guide/getting-started.md)** or dive into **[Skills Reference](./docs/user-guide/skills-reference.md)** to see what the agents can do.
 
 ---
 
