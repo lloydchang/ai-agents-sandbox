@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/lloydchang/backstage-temporal/backend/types"
 )
 
 // WorkflowTranslator converts Backstage workflow definitions to Temporal workflows
