@@ -1,0 +1,498 @@
+{
+  "resource_icons": {
+    "compute": {
+      "vm": {
+        "running": {
+          "icon": "🖥️",
+          "color": "#27ae60",
+          "description": "Virtual Machine - Running"
+        },
+        "stopped": {
+          "icon": "💤",
+          "color": "#95a5a6",
+          "description": "Virtual Machine - Stopped"
+        },
+        "pending": {
+          "icon": "⏳",
+          "color": "#f39c12",
+          "description": "Virtual Machine - Pending"
+        },
+        "error": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "Virtual Machine - Error"
+        }
+      },
+      "container": {
+        "running": {
+          "icon": "📦",
+          "color": "#3498db",
+          "description": "Container - Running"
+        },
+        "stopped": {
+          "icon": "📦",
+          "color": "#95a5a6",
+          "description": "Container - Stopped"
+        },
+        "pending": {
+          "icon": "🔄",
+          "color": "#f39c12",
+          "description": "Container - Pending"
+        }
+      },
+      "serverless": {
+        "active": {
+          "icon": "⚡",
+          "color": "#9b59b6",
+          "description": "Serverless Function - Active"
+        },
+        "idle": {
+          "icon": "⚡",
+          "color": "#95a5a6",
+          "description": "Serverless Function - Idle"
+        }
+      }
+    },
+    "storage": {
+      "block": {
+        "available": {
+          "icon": "💾",
+          "color": "#27ae60",
+          "description": "Block Storage - Available"
+        },
+        "full": {
+          "icon": "💾",
+          "color": "#e74c3c",
+          "description": "Block Storage - Full"
+        },
+        "degraded": {
+          "icon": "💾",
+          "color": "#f39c12",
+          "description": "Block Storage - Degraded"
+        }
+      },
+      "object": {
+        "available": {
+          "icon": "🗂️",
+          "color": "#3498db",
+          "description": "Object Storage - Available"
+        },
+        "restricted": {
+          "icon": "🔒",
+          "color": "#f39c12",
+          "description": "Object Storage - Restricted"
+        },
+        "unavailable": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "Object Storage - Unavailable"
+        }
+      },
+      "archive": {
+        "available": {
+          "icon": "📚",
+          "color": "#16a085",
+          "description": "Archive Storage - Available"
+        },
+        "locked": {
+          "icon": "🔒",
+          "color": "#95a5a6",
+          "description": "Archive Storage - Locked"
+        }
+      }
+    },
+    "network": {
+      "vpc": {
+        "available": {
+          "icon": "🌐",
+          "color": "#27ae60",
+          "description": "VPC - Available"
+        },
+        "isolated": {
+          "icon": "🌐",
+          "color": "#f39c12",
+          "description": "VPC - Isolated"
+        }
+      },
+      "load_balancer": {
+        "healthy": {
+          "icon": "⚖️",
+          "color": "#27ae60",
+          "description": "Load Balancer - Healthy"
+        },
+        "degraded": {
+          "icon": "⚠️",
+          "color": "#f39c12",
+          "description": "Load Balancer - Degraded"
+        },
+        "unhealthy": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "Load Balancer - Unhealthy"
+        }
+      },
+      "cdn": {
+        "active": {
+          "icon": "🚀",
+          "color": "#3498db",
+          "description": "CDN - Active"
+        },
+        "inactive": {
+          "icon": "🚀",
+          "color": "#95a5a6",
+          "description": "CDN - Inactive"
+        }
+      },
+      "dns": {
+        "healthy": {
+          "icon": "🔍",
+          "color": "#27ae60",
+          "description": "DNS - Healthy"
+        },
+        "error": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "DNS - Error"
+        }
+      }
+    },
+    "database": {
+      "sql": {
+        "available": {
+          "icon": "🗄️",
+          "color": "#27ae60",
+          "description": "SQL Database - Available"
+        },
+        "backup": {
+          "icon": "🗄️",
+          "color": "#f39c12",
+          "description": "SQL Database - Backup"
+        },
+        "maintenance": {
+          "icon": "🔧",
+          "color": "#95a5a6",
+          "description": "SQL Database - Maintenance"
+        },
+        "unavailable": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "SQL Database - Unavailable"
+        }
+      },
+      "nosql": {
+        "available": {
+          "icon": "🔥",
+          "color": "#e67e22",
+          "description": "NoSQL Database - Available"
+        },
+        "degraded": {
+          "icon": "🔥",
+          "color": "#f39c12",
+          "description": "NoSQL Database - Degraded"
+        },
+        "unavailable": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "NoSQL Database - Unavailable"
+        }
+      },
+      "cache": {
+        "active": {
+          "icon": "⚡",
+          "color": "#e74c3c",
+          "description": "Cache - Active"
+        },
+        "cold": {
+          "icon": "❄️",
+          "color": "#3498db",
+          "description": "Cache - Cold"
+        },
+        "unavailable": {
+          "icon": "❌",
+          "color": "#95a5a6",
+          "description": "Cache - Unavailable"
+        }
+      }
+    },
+    "services": {
+      "monitoring": {
+        "healthy": {
+          "icon": "📊",
+          "color": "#27ae60",
+          "description": "Monitoring Service - Healthy"
+        },
+        "warning": {
+          "icon": "⚠️",
+          "color": "#f39c12",
+          "description": "Monitoring Service - Warning"
+        },
+        "error": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "Monitoring Service - Error"
+        }
+      },
+      "security": {
+        "active": {
+          "icon": "🛡️",
+          "color": "#27ae60",
+          "description": "Security Service - Active"
+        },
+        "disabled": {
+          "icon": "🛡️",
+          "color": "#95a5a6",
+          "description": "Security Service - Disabled"
+        }
+      },
+      "analytics": {
+        "processing": {
+          "icon": "📈",
+          "color": "#3498db",
+          "description": "Analytics Service - Processing"
+        },
+        "idle": {
+          "icon": "📈",
+          "color": "#95a5a6",
+          "description": "Analytics Service - Idle"
+        }
+      },
+      "backup": {
+        "running": {
+          "icon": "💿",
+          "color": "#27ae60",
+          "description": "Backup Service - Running"
+        },
+        "completed": {
+          "icon": "✅",
+          "color": "#27ae60",
+          "description": "Backup Service - Completed"
+        },
+        "failed": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "Backup Service - Failed"
+        }
+      }
+    },
+    "applications": {
+      "web": {
+        "healthy": {
+          "icon": "🌍",
+          "color": "#27ae60",
+          "description": "Web Application - Healthy"
+        },
+        "degraded": {
+          "icon": "🌍",
+          "color": "#f39c12",
+          "description": "Web Application - Degraded"
+        },
+        "down": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "Web Application - Down"
+        }
+      },
+      "api": {
+        "available": {
+          "icon": "🔌",
+          "color": "#27ae60",
+          "description": "API - Available"
+        },
+        "rate_limited": {
+          "icon": "🔌",
+          "color": "#f39c12",
+          "description": "API - Rate Limited"
+        },
+        "unavailable": {
+          "icon": "❌",
+          "color": "#e74c3c",
+          "description": "API - Unavailable"
+        }
+      },
+      "mobile": {
+        "active": {
+          "icon": "📱",
+          "color": "#27ae60",
+          "description": "Mobile App - Active"
+        },
+        "maintenance": {
+          "icon": "📱",
+          "color": "#f39c12",
+          "description": "Mobile App - Maintenance"
+        }
+      }
+    }
+  },
+  "environment_colors": {
+    "production": {
+      "primary": "#e74c3c",
+      "secondary": "#c0392b",
+      "description": "Production Environment"
+    },
+    "staging": {
+      "primary": "#f39c12",
+      "secondary": "#d68910",
+      "description": "Staging Environment"
+    },
+    "development": {
+      "primary": "#3498db",
+      "secondary": "#2980b9",
+      "description": "Development Environment"
+    },
+    "testing": {
+      "primary": "#9b59b6",
+      "secondary": "#8e44ad",
+      "description": "Testing Environment"
+    },
+    "sandbox": {
+      "primary": "#1abc9c",
+      "secondary": "#16a085",
+      "description": "Sandbox Environment"
+    }
+  },
+  "status_indicators": {
+    "health": {
+      "excellent": {
+        "color": "#27ae60",
+        "icon": "💚",
+        "description": "Excellent Health"
+      },
+      "good": {
+        "color": "#2ecc71",
+        "icon": "💚",
+        "description": "Good Health"
+      },
+      "fair": {
+        "color": "#f39c12",
+        "icon": "💛",
+        "description": "Fair Health"
+      },
+      "poor": {
+        "color": "#e67e22",
+        "icon": "🧡",
+        "description": "Poor Health"
+      },
+      "critical": {
+        "color": "#e74c3c",
+        "icon": "❤️",
+        "description": "Critical Health"
+      }
+    },
+    "cost_efficiency": {
+      "excellent": {
+        "color": "#27ae60",
+        "icon": "💰",
+        "description": "Excellent Cost Efficiency"
+      },
+      "good": {
+        "color": "#2ecc71",
+        "icon": "💰",
+        "description": "Good Cost Efficiency"
+      },
+      "fair": {
+        "color": "#f39c12",
+        "icon": "💰",
+        "description": "Fair Cost Efficiency"
+      },
+      "poor": {
+        "color": "#e67e22",
+        "icon": "💸",
+        "description": "Poor Cost Efficiency"
+      },
+      "critical": {
+        "color": "#e74c3c",
+        "icon": "💸",
+        "description": "Critical Cost Inefficiency"
+      }
+    },
+    "utilization": {
+      "optimal": {
+        "color": "#27ae60",
+        "range": "60-80%",
+        "description": "Optimal Utilization"
+      },
+      "good": {
+        "color": "#2ecc71",
+        "range": "40-60% or 80-90%",
+        "description": "Good Utilization"
+      },
+      "underutilized": {
+        "color": "#f39c12",
+        "range": "20-40%",
+        "description": "Underutilized"
+      },
+      "overutilized": {
+        "color": "#e67e22",
+        "range": "90-95%",
+        "description": "Overutilized"
+      },
+      "critical": {
+        "color": "#e74c3c",
+        "range": "<20% or >95%",
+        "description": "Critical Utilization"
+      }
+    }
+  },
+  "relationship_types": {
+    "dependency": {
+      "icon": "🔗",
+      "color": "#3498db",
+      "line_style": "solid",
+      "description": "Resource Dependency"
+    },
+    "data_flow": {
+      "icon": "➡️",
+      "color": "#27ae60",
+      "line_style": "dashed",
+      "description": "Data Flow"
+    },
+    "control": {
+      "icon": "🎮",
+      "color": "#e74c3c",
+      "line_style": "dotted",
+      "description": "Control Relationship"
+    },
+    "backup": {
+      "icon": "💾",
+      "color": "#f39c12",
+      "line_style": "dash-dot",
+      "description": "Backup Relationship"
+    },
+    "monitoring": {
+      "icon": "📊",
+      "color": "#9b59b6",
+      "line_style": "double",
+      "description": "Monitoring Relationship"
+    }
+  },
+  "size_mappings": {
+    "node_size": {
+      "tiny": 10,
+      "small": 15,
+      "medium": 20,
+      "large": 25,
+      "huge": 30
+    },
+    "edge_width": {
+      "thin": 1,
+      "normal": 2,
+      "thick": 3,
+      "very_thick": 4
+    }
+  },
+  "animation_settings": {
+    "pulse": {
+      "critical_resources": true,
+      "failed_resources": true,
+      "duration_ms": 1000
+    },
+    "fade": {
+      "transitions": true,
+      "duration_ms": 300
+    },
+    "bounce": {
+      "new_resources": true,
+      "duration_ms": 500
+    }
+  }
+}

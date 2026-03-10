@@ -1,0 +1,293 @@
+{
+  "optimization_rules": {
+    "compute": {
+      "rightsize_down": {
+        "conditions": {
+          "cpu_utilization_max": 0.3,
+          "memory_utilization_max": 0.5,
+          "minimum_runtime_days": 7
+        },
+        "actions": [
+          {
+            "type": "instance_resize",
+            "target_size": "calculate_optimal_size",
+            "estimated_savings_percentage": 40,
+            "risk_level": "low",
+            "implementation_days": 3
+          }
+        ],
+        "exclusions": [
+          "critical_production_workloads",
+          "database_instances",
+          "stateful_applications"
+        ]
+      },
+      "rightsize_up": {
+        "conditions": {
+          "cpu_utilization_min": 0.9,
+          "memory_utilization_min": 0.9,
+          "performance_impacts": true
+        },
+        "actions": [
+          {
+            "type": "instance_resize",
+            "target_size": "next_larger_size",
+            "estimated_savings_percentage": 0,
+            "risk_level": "low",
+            "implementation_days": 7
+          }
+        ]
+      },
+      "schedule": {
+        "conditions": {
+          "environment": ["development", "staging", "testing"],
+          "utilization_pattern": "business_hours_only"
+        },
+        "actions": [
+          {
+            "type": "power_schedule",
+            "schedule": "weekdays_9_to_5",
+            "estimated_savings_percentage": 65,
+            "risk_level": "low",
+            "implementation_days": 2
+          }
+        ]
+      },
+      "spot_instances": {
+        "conditions": {
+          "workload_type": "fault_tolerant",
+          "interruption_tolerance": "high",
+          "stateless": true
+        },
+        "actions": [
+          {
+            "type": "convert_to_spot",
+            "estimated_savings_percentage": 70,
+            "risk_level": "medium",
+            "implementation_days": 14
+          }
+        ]
+      }
+    },
+    "storage": {
+      "lifecycle_policy": {
+        "conditions": {
+          "access_pattern": "infrequent",
+          "data_age_days_min": 30
+        },
+        "actions": [
+          {
+            "type": "implement_lifecycle",
+            "transition_to_ia": 30,
+            "transition_to_glacier": 90,
+            "delete_after": 2555,
+            "estimated_savings_percentage": 40,
+            "risk_level": "low",
+            "implementation_days": 7
+          }
+        ]
+      },
+      "storage_downsize": {
+        "conditions": {
+          "utilization_max": 0.5,
+          "growth_rate_max": 0.05
+        },
+        "actions": [
+          {
+            "type": "volume_resize",
+            "target_size": "current_usage_1.2x",
+            "estimated_savings_percentage": 30,
+            "risk_level": "medium",
+            "implementation_days": 14
+          }
+        ]
+      },
+      "storage_tier_optimization": {
+        "conditions": {
+          "performance_requirements": "standard",
+          "current_tier": "premium"
+        },
+        "actions": [
+          {
+            "type": "tier_change",
+            "target_tier": "standard",
+            "estimated_savings_percentage": 50,
+            "risk_level": "medium",
+            "implementation_days": 21
+          }
+        ]
+      }
+    },
+    "network": {
+      "cdn_optimization": {
+        "conditions": {
+          "content_type": "static",
+          "geographic_distribution": "global",
+          "traffic_pattern": "read_heavy"
+        },
+        "actions": [
+          {
+            "type": "enable_cdn",
+            "estimated_savings_percentage": 30,
+            "risk_level": "low",
+            "implementation_days": 5
+          }
+        ]
+      },
+      "data_transfer_optimization": {
+        "conditions": {
+          "inter_region_traffic": true,
+          "data_volume_gb_month": 1000
+        },
+        "actions": [
+          {
+            "type": "optimize_data_transfer",
+            "estimated_savings_percentage": 20,
+            "risk_level": "low",
+            "implementation_days": 10
+          }
+        ]
+      }
+    },
+    "database": {
+      "instance_optimization": {
+        "conditions": {
+          "cpu_utilization_max": 0.6,
+          "memory_utilization_max": 0.7,
+          "storage_utilization_max": 0.8
+        },
+        "actions": [
+          {
+            "type": "instance_resize",
+            "estimated_savings_percentage": 35,
+            "risk_level": "medium",
+            "implementation_days": 21
+          }
+        ]
+      },
+      "read_replica_optimization": {
+        "conditions": {
+          "read_write_ratio": 3,
+          "read_replica_count": 0
+        },
+        "actions": [
+          {
+            "type": "add_read_replica",
+            "estimated_savings_percentage": 25,
+            "risk_level": "low",
+            "implementation_days": 7
+          }
+        ]
+      }
+    }
+  },
+  "auto_approval_thresholds": {
+    "maximum_implementation_cost": 500,
+    "minimum_savings_percentage": 10,
+    "maximum_implementation_days": 30,
+    "maximum_risk_level": "medium"
+  },
+  "risk_assessment": {
+    "low": {
+      "description": "Minimal risk of service disruption",
+      "rollback_complexity": "simple",
+      "business_impact": "minimal",
+      "approval_required": "automatic"
+    },
+    "medium": {
+      "description": "Moderate risk requiring monitoring",
+      "rollback_complexity": "moderate",
+      "business_impact": "limited",
+      "approval_required": "team_lead"
+    },
+    "high": {
+      "description": "Significant risk requiring careful planning",
+      "rollback_complexity": "complex",
+      "business_impact": "significant",
+      "approval_required": "manager"
+    },
+    "critical": {
+      "description": "High risk requiring executive approval",
+      "rollback_complexity": "very_complex",
+      "business_impact": "critical",
+      "approval_required": "executive"
+    }
+  },
+  "implementation_priorities": {
+    "quick_wins": {
+      "max_implementation_days": 7,
+      "min_savings_percentage": 5,
+      "max_risk_level": "low"
+    },
+    "medium_term": {
+      "max_implementation_days": 30,
+      "min_savings_percentage": 15,
+      "max_risk_level": "medium"
+    },
+    "strategic": {
+      "max_implementation_days": 90,
+      "min_savings_percentage": 25,
+      "max_risk_level": "high"
+    }
+  },
+  "compliance_constraints": {
+    "data_residency": {
+      "description": "Data must remain in specific regions",
+      "impact": "limits cross-region optimizations"
+    },
+    "retention_policies": {
+      "description": "Data retention requirements",
+      "impact": "affects storage lifecycle policies"
+    },
+    "security_standards": {
+      "description": "Security and encryption requirements",
+      "impact": "limits certain instance types and configurations"
+    },
+    "audit_requirements": {
+      "description": "Audit trail and logging requirements",
+      "impact": "affects monitoring and logging costs"
+    }
+  },
+  "monitoring_requirements": {
+    "pre_implementation": {
+      "metrics_to_collect": [
+        "cpu_utilization",
+        "memory_utilization",
+        "disk_utilization",
+        "network_throughput",
+        "application_performance"
+      ],
+      "collection_period_days": 14
+    },
+    "post_implementation": {
+      "monitoring_period_days": 30,
+      "success_criteria": {
+        "performance_degradation_max": 0.05,
+        "availability_min": 0.99,
+        "user_impact_max": 0.02
+      }
+    }
+  },
+  "notification_rules": {
+    "optimization_identified": {
+      "channels": ["email", "slack"],
+      "recipients": ["cost_optimization_team", "resource_owner"],
+      "template": "optimization_opportunity"
+    },
+    "implementation_started": {
+      "channels": ["email"],
+      "recipients": ["resource_owner", "operations_team"],
+      "template": "implementation_notification"
+    },
+    "implementation_completed": {
+      "channels": ["email", "slack"],
+      "recipients": ["cost_optimization_team", "finance_team"],
+      "template": "implementation_results"
+    },
+    "savings_achieved": {
+      "channels": ["email", "slack"],
+      "recipients": ["executive_team", "finance_team"],
+      "template": "savings_report"
+    }
+  }
+}

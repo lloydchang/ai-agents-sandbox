@@ -1,0 +1,335 @@
+{
+  "threat_intelligence_sources": {
+    "cve_database": {
+      "name": "NVD CVE Database",
+      "url": "https://services.nvd.nist.gov/rest/json/cves/2.0",
+      "api_key_required": false,
+      "rate_limit": "5 requests per 30 seconds",
+      "data_format": "json",
+      "update_frequency": "daily",
+      "reliability": "high",
+      "coverage": "global"
+    },
+    "cisa_kev": {
+      "name": "CISA Known Exploited Vulnerabilities",
+      "url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+      "api_key_required": false,
+      "rate_limit": "unlimited",
+      "data_format": "json",
+      "update_frequency": "daily",
+      "reliability": "very_high",
+      "coverage": "us_focused"
+    },
+    "abuseipdb": {
+      "name": "AbuseIPDB",
+      "url": "https://api.abuseipdb.com/api/v2/check",
+      "api_key_required": true,
+      "rate_limit": "1000 requests per day",
+      "data_format": "json",
+      "update_frequency": "real_time",
+      "reliability": "medium",
+      "coverage": "global"
+    },
+    "virustotal": {
+      "name": "VirusTotal",
+      "url": "https://www.virustotal.com/vtapi/v2",
+      "api_key_required": true,
+      "rate_limit": "4 requests per minute",
+      "data_format": "json",
+      "update_frequency": "real_time",
+      "reliability": "high",
+      "coverage": "global"
+    },
+    "otx": {
+      "name": "AlienVault OTX",
+      "url": "https://otx.alienvault.com/api/v1",
+      "api_key_required": true,
+      "rate_limit": "30 requests per minute",
+      "data_format": "json",
+      "update_frequency": "real_time",
+      "reliability": "high",
+      "coverage": "global"
+    }
+  },
+  "ioc_types": {
+    "malicious_ips": {
+      "description": "IP addresses known for malicious activity",
+      "sources": ["abuseipdb", "otx"],
+      "confidence_threshold": 0.7,
+      "retention_days": 90,
+      "action": "block"
+    },
+    "vulnerable_services": {
+      "description": "Services with known vulnerabilities",
+      "sources": ["cve_database", "cisa_kev"],
+      "confidence_threshold": 0.8,
+      "retention_days": 365,
+      "action": "patch"
+    },
+    "malware_hashes": {
+      "description": "File hashes associated with malware",
+      "sources": ["virustotal"],
+      "confidence_threshold": 0.9,
+      "retention_days": 180,
+      "action": "quarantine"
+    },
+    "malicious_domains": {
+      "description": "Domains involved in malicious activity",
+      "sources": ["otx"],
+      "confidence_threshold": 0.6,
+      "retention_days": 60,
+      "action": "block"
+    }
+  },
+  "threat_scoring": {
+    "cvss_weights": {
+      "critical": 10.0,
+      "high": 7.5,
+      "medium": 5.0,
+      "low": 2.0
+    },
+    "exploitability_factors": {
+      "weaponized": 1.5,
+      "public_exploit": 1.3,
+      "known_in_wild": 1.4,
+      "easy_exploit": 1.2
+    },
+    "impact_factors": {
+      "critical_system": 1.5,
+      "customer_data": 1.4,
+      "financial_impact": 1.3,
+      "reputation_impact": 1.2
+    },
+    "temporal_factors": {
+      "patch_available": 0.7,
+      "vendor_acknowledged": 0.9,
+      "recent_disclosure": 1.2,
+      "trending_threat": 1.3
+    }
+  },
+  "automated_response": {
+    "blocking_rules": {
+      "ip_blocking": {
+        "conditions": {
+          "confidence_min": 0.8,
+          "threat_types": ["malicious_ips", "c2_infrastructure"],
+          "impact_level": "medium"
+        },
+        "actions": [
+          "add_to_firewall_blocklist",
+          "update_security_groups",
+          "notify_security_team"
+        ],
+        "duration_days": 30,
+        "auto_approval": true
+      },
+      "service_isolation": {
+        "conditions": {
+          "confidence_min": 0.9,
+          "threat_types": ["vulnerable_services"],
+          "cvss_score_min": 8.0,
+          "exploit_available": true
+        },
+        "actions": [
+          "isolate_from_network",
+          "disable_public_access",
+          "enable_additional_monitoring"
+        ],
+        "auto_approval": false,
+        "approval_required": "security_lead"
+      }
+    },
+    "patching_rules": {
+      "automatic_patching": {
+        "conditions": {
+          "confidence_min": 0.8,
+          "patch_available": true,
+          "patch_complexity": "simple",
+          "business_impact": "low"
+        },
+        "actions": [
+          "schedule_maintenance_window",
+          "apply_patch",
+          "verify_patch_success",
+          "restart_service_if_needed"
+        ],
+        "auto_approval": true,
+        "rollback_enabled": true
+      },
+      "manual_patching": {
+        "conditions": {
+          "confidence_min": 0.7,
+          "patch_available": true,
+          "patch_complexity": "complex",
+          "business_impact": "medium"
+        },
+        "actions": [
+          "create_patch_ticket",
+          "notify_system_owner",
+          "schedule_review_meeting",
+          "document_patch_procedure"
+        ],
+        "auto_approval": false,
+        "approval_required": "system_owner"
+      }
+    }
+  },
+  "monitoring_rules": {
+    "continuous_monitoring": {
+      "scan_frequency_minutes": 60,
+      "ioc_refresh_hours": 6,
+      "threat_feed_updates_hours": 12
+    },
+    "alert_thresholds": {
+      "new_critical_vulnerabilities": 1,
+      "malicious_ip_hits": 5,
+      "malware_detections": 1,
+      "failed_login_attempts": 10
+    },
+    "escalation_rules": {
+      "level_1": {
+        "conditions": ["new_critical_vulnerability"],
+        "actions": ["create_security_ticket", "notify_security_team"],
+        "response_time_minutes": 30
+      },
+      "level_2": {
+        "conditions": ["active_malware_detected", "exploit_attempt"],
+        "actions": ["isolate_affected_systems", "notify_incident_response"],
+        "response_time_minutes": 15
+      },
+      "level_3": {
+        "conditions": ["data_breach_indicators", "critical_compromise"],
+        "actions": ["declare_incident", "notify_executives", "engage_forensics"],
+        "response_time_minutes": 5
+      }
+    }
+  },
+  "compliance_integration": {
+    "soc2_controls": {
+      "security_monitoring": {
+        "requirement": "CC7.1 - Monitoring",
+        "implementation": "continuous_threat_monitoring",
+        "evidence": "threat_monitoring_logs",
+        "frequency": "continuous"
+      },
+      "vulnerability_management": {
+        "requirement": "CC7.2 - Vulnerability Management",
+        "implementation": "automated_vulnerability_scanning",
+        "evidence": "vulnerability_scan_reports",
+        "frequency": "weekly"
+      },
+      "incident_response": {
+        "requirement": "CC7.3 - Incident Response",
+        "implementation": "automated_incident_detection",
+        "evidence": "incident_response_logs",
+        "frequency": "continuous"
+      }
+    },
+    "hipaa_safeguards": {
+      "technical_safeguards": {
+        "requirement": "164.312(b) - Access Control",
+        "implementation": "threat_based_access_control",
+        "evidence": "access_control_logs",
+        "frequency": "continuous"
+      },
+      "audit_controls": {
+        "requirement": "164.312(b) - Audit Controls",
+        "implementation": "comprehensive_security_logging",
+        "evidence": "audit_trail_logs",
+        "frequency": "continuous"
+      }
+    },
+    "gdpr_requirements": {
+      "data_protection": {
+        "requirement": "Article 32 - Security of Processing",
+        "implementation": "threat_based_data_protection",
+        "evidence": "data_protection_measures",
+        "frequency": "continuous"
+      },
+      "breach_notification": {
+        "requirement": "Article 33 - Notification of Personal Data Breach",
+        "implementation": "automated_breach_detection",
+        "evidence": "breach_detection_logs",
+        "frequency": "continuous"
+      }
+    }
+  },
+  "reporting_templates": {
+    "daily_threat_summary": {
+      "recipients": ["security_team", "operations_team"],
+      "format": "html",
+      "sections": [
+        "new_vulnerabilities",
+        "threat_trends",
+        "blocked_attempts",
+        "system_status"
+      ]
+    },
+    "weekly_security_report": {
+      "recipients": ["security_team", "management"],
+      "format": "pdf",
+      "sections": [
+        "executive_summary",
+        "vulnerability_assessment",
+        "threat_intelligence",
+        "compliance_status",
+        "recommendations"
+      ]
+    },
+    "monthly_compliance_report": {
+      "recipients": ["compliance_officer", "audit_team"],
+      "format": "pdf",
+      "sections": [
+        "compliance_overview",
+        "control_assessments",
+        "risk_assessment",
+        "remediation_progress",
+        "audit_preparation"
+      ]
+    }
+  },
+  "integration_endpoints": {
+    "siem_systems": [
+      {
+        "name": "Splunk",
+        "api_endpoint": "https://splunk.company.com:8089/services/collector/event",
+        "authentication": "token",
+        "data_format": "json"
+      },
+      {
+        "name": "ELK Stack",
+        "api_endpoint": "https://elasticsearch.company.com:9200/security-events/_doc",
+        "authentication": "api_key",
+        "data_format": "json"
+      }
+    ],
+    "ticketing_systems": [
+      {
+        "name": "ServiceNow",
+        "api_endpoint": "https://company.service-now.com/api/now/table/incident",
+        "authentication": "oauth",
+        "data_format": "json"
+      },
+      {
+        "name": "Jira",
+        "api_endpoint": "https://company.atlassian.net/rest/api/2/issue",
+        "authentication": "basic",
+        "data_format": "json"
+      }
+    ],
+    "notification_systems": [
+      {
+        "name": "Slack",
+        "api_endpoint": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+        "authentication": "none",
+        "data_format": "json"
+      },
+      {
+        "name": "Microsoft Teams",
+        "api_endpoint": "https://outlook.office.com/webhook/...",
+        "authentication": "none",
+        "data_format": "json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+interface:
+  display_name: "Cost Optimizer"
+  short_description: "AI-powered cost analysis and optimization recommendations"
+  icon_small: "./assets/cost-icon.svg"
+  icon_large: "./assets/cost-icon-large.png"
+  brand_color: "#27ae60"
+  default_prompt: "Optimize costs for"
+
+policy:
+  allow_implicit_invocation: true
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "temporal-agents"
+      description: "Temporal AI Agents MCP server"
+      transport: "http"
+      url: "http://localhost:8082"
+    - type: "api"
+      value: "cost-analytics"
+      description: "Cost analytics API"
+      transport: "https"
+      url: "https://api.cost.example.com"
+    - type: "api"
+      value: "cloud-billing"
+      description: "Cloud provider billing APIs"
+      transport: "https"
+      url: "https://billing.cloud.example.com"
