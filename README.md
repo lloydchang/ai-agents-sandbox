@@ -1,16 +1,17 @@
-# Temporal AI Agents - Multi-Interface Platform
+# Temporal AI Agents - Comprehensive Multi-Interface Platform
 
-A comprehensive AI-native engineering platform that combines Temporal durable workflows with AI agent orchestration, providing multiple interfaces for seamless integration: **REST APIs**, **MCP Server**, **WebMCP Client**, **CLI Tool**, and **Enhanced GUI**.
+A production-ready AI-native engineering platform that combines **Temporal durable workflows** with **AI agent orchestration**, providing comprehensive interfaces for seamless integration: **REST APIs**, **MCP Server**, **WebMCP Client**, **CLI Tools**, and **Enhanced GUI**.
 
 ## 🏗️ Architecture Overview
 
 ```
-AI Assistant (Claude/Codex)
+AI Assistant (Claude/Codex/CustomGPT)
     |
     v
 Coordination Layer
 ├── AGENTS.md (Agent behavior rules)
 ├── SKILL.md (Specialized capabilities)
+├── .agents/skills/ (Skill definitions & scripts)
 └── tools/ (Safe execution boundaries)
     |
     v
@@ -30,7 +31,10 @@ Temporal Engine (Go Backend)
 ├── Multi-Agent Collaboration
 ├── Human-in-the-Loop Workflows
 ├── Compliance Automation
-└── Infrastructure Emulation
+├── Skills System (Claude/Codex compatible)
+├── MCP Integration (Model Context Protocol)
+├── Infrastructure Emulation
+└── Multi-Interface Support
     |
     v
 PostgreSQL + Temporal Server
@@ -43,6 +47,7 @@ PostgreSQL + Temporal Server
 - **Human-in-the-Loop**: Seamless integration of human decision points in workflows
 - **Compliance Automation**: Built-in support for SOC2, GDPR, HIPAA standards
 - **Infrastructure Emulation**: Safe simulation of AWS, Azure, GCP resources
+- **MCP Integration**: Standardized Model Context Protocol for tool interoperability
 
 ### 🔧 Multiple Interfaces
 - **REST APIs**: Full programmatic access to workflows and agent capabilities
@@ -55,6 +60,7 @@ PostgreSQL + Temporal Server
 - **AGENTS.md**: Global agent behavior rules and repository policies
 - **SKILL.md**: Specialized workflow capabilities with structured I/O
 - **Tool Configurations**: Safe execution boundaries for bash, git, kubectl, terraform, docker
+- **Interface Standards**: Consistent patterns across all client types
 
 ## 🚀 Quick Start
 
@@ -355,6 +361,8 @@ cat frontend/app-config.yaml
 - **[AGENTS.md](AGENTS.md)**: Agent operating manual and behavior rules
 - **[SKILL.md](SKILL.md)**: AI skill definitions and usage patterns
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)**: Technical implementation details
+- **[docs/comprehensive-interfaces-guide.md](docs/comprehensive-interfaces-guide.md)**: Complete interfaces documentation (SKILL.md, AGENTS.md, MCP, APIs, CLIs, GUIs)
+- **[docs/claude-and-codex-skills.txt](docs/claude-and-codex-skills.txt)**: AI assistant skills and workflows reference
 - **[docs/](docs/)**: Additional guides and specifications
 
 ## 🤝 Contributing
@@ -364,6 +372,20 @@ This is an AI-native engineering platform designed for:
 - **Multi-interface development** supporting various integration patterns
 - **Enterprise-grade orchestration** with durable execution guarantees
 - **Regulatory compliance** built into the core architecture
+- **AI assistant integration** supporting Claude Skills, Codex Skills, and Custom GPTs
+
+### Interface Development
+- **SKILL.md**: Create reusable workflow capabilities for AI assistants
+- **AGENTS.md**: Define agent behavior rules and safety constraints
+- **MCP Integration**: Implement standardized Model Context Protocol interfaces
+- **Multi-Client Support**: Build consistent experiences across CLI, GUI, API, and web interfaces
+
+### Contribution Areas
+- **AI Agent Workflows**: New orchestration patterns and agent collaborations
+- **Interface Implementations**: Additional client types and protocol support
+- **Compliance Frameworks**: New regulatory standards and validation rules
+- **Infrastructure Emulation**: Additional cloud providers and services
+- **Documentation**: Guides and examples for all interface types
 
 ## 📄 License
 
