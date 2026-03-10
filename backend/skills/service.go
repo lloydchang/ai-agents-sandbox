@@ -44,14 +44,14 @@ func (sm *SkillManager) initializeSkillDiscovery(workingDir string) {
 		sm.AddSkillDir(claudeSkillsDir, "claude-user", 20)
 	}
 
-	// 3. Project skills (.agents/skills from current directory up to repo root)
+	// 3. Project skills (.agents/skills and .claude/skills from current directory up to repo root)
 	sm.discoverProjectSkills(workingDir)
 
 	// 4. System skills (bundled with the application)
 	// These would be in the application directory
 }
 
-// discoverProjectSkills discovers skills from .agents/skills directories
+// discoverProjectSkills discovers skills from .agents/skills and .claude/skills directories
 func (sm *SkillManager) discoverProjectSkills(startDir string) {
 	currentDir := startDir
 	repoRootFound := false
