@@ -1,0 +1,32 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: payment-service
+  description: Handles payment processing, refunds, and payment method management
+  tags:
+    - payment
+    - financial
+    - go
+    - microservice
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    temporal.io/workflows: |
+      - payment-processing
+      - refund-processing
+      - payment-validation
+    temporal.io/ui-url: http://localhost:8233
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "8080"
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  providesApis:
+    - payment-api
+    - refund-api
+  dependsOn:
+    - resource:postgres-payment-db
+    - component:notification-service
+    - component:audit-service
+  system: payment-system
