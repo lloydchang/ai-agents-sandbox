@@ -1,22 +1,62 @@
-#  Sandbox: Backstage + Temporal
+# Temporal AI Agents - Multi-Interface Platform
 
-This repository provides a sandbox environment for experimenting with Backstage (TypeScript frontend) and Temporal (Go backend) integration, including Dockerized environments, sample workflows, Backstage plugin, and local development scripts.
+A comprehensive AI-native engineering platform that combines Temporal durable workflows with AI agent orchestration, providing multiple interfaces for seamless integration: **REST APIs**, **MCP Server**, **WebMCP Client**, **CLI Tool**, and **Enhanced GUI**.
 
-## Architecture
-
-```
-
-Backstage Frontend (TypeScript)
-    |
-    v
-Temporal Backend (Go Worker) <-> Temporal Server <-> PostgreSQL
-    |
-    v
-Workflows & Activities
+## 🏗️ Architecture Overview
 
 ```
+AI Assistant (Claude/Codex)
+    |
+    v
+Coordination Layer
+├── AGENTS.md (Agent behavior rules)
+├── SKILL.md (Specialized capabilities)
+└── tools/ (Safe execution boundaries)
+    |
+    v
+8 Interface Types
+├── REST APIs (Programmatic access)
+├── MCP Server (Standardized protocol)
+├── WebMCP Client (Browser interface)
+├── CLI Tool (Command-line skills)
+├── Enhanced GUI (Visual management)
+├── SKILL.md Integration (AI assistant)
+├── AGENTS.md Rules (Behavior constraints)
+└── Tool Configuration (Safety boundaries)
+    |
+    v
+Temporal Engine (Go Backend)
+├── AI Agent Orchestration
+├── Multi-Agent Collaboration
+├── Human-in-the-Loop Workflows
+├── Compliance Automation
+└── Infrastructure Emulation
+    |
+    v
+PostgreSQL + Temporal Server
+```
 
-## Quick Start
+## 🎯 Key Features
+
+### 🤖 AI Agent Orchestration
+- **Multi-Agent Collaboration**: Coordinate specialized AI agents for complex tasks
+- **Human-in-the-Loop**: Seamless integration of human decision points in workflows
+- **Compliance Automation**: Built-in support for SOC2, GDPR, HIPAA standards
+- **Infrastructure Emulation**: Safe simulation of AWS, Azure, GCP resources
+
+### 🔧 Multiple Interfaces
+- **REST APIs**: Full programmatic access to workflows and agent capabilities
+- **MCP Server**: Standardized Model Context Protocol for AI tool interoperability
+- **WebMCP Client**: Browser-based interface for interactive agent management
+- **CLI Tool**: Command-line interface with skill invocation (`/skill-name` syntax)
+- **Enhanced GUI**: Visual workflow builder and real-time monitoring dashboard
+
+### 📋 Coordination Layer
+- **AGENTS.md**: Global agent behavior rules and repository policies
+- **SKILL.md**: Specialized workflow capabilities with structured I/O
+- **Tool Configurations**: Safe execution boundaries for bash, git, kubectl, terraform, docker
+
+## 🚀 Quick Start
 
 ### Prerequisites
 - Go 1.21+
@@ -27,96 +67,192 @@ Workflows & Activities
 ```bash
 cd backend && docker-compose up -d
 ```
-This starts:
-- PostgreSQL on port 5432
-- Temporal Server on port 7233
-- Temporal UI on port 8080
+Starts PostgreSQL, Temporal Server, and Temporal UI.
 
-### 2. Start Backend Worker
+### 2. Start Backend (All Interfaces)
 ```bash
 cd backend && go run main.go
 ```
-The worker will be available on port 8081 with endpoints:
-- POST /workflow/start
-- GET /workflow/status?id=<workflow_id>
+Launches:
+- REST API server on `:8081`
+- MCP server for AI tool integration
+- WebMCP client interface
+- CLI-ready endpoints
 
-### 3. Start Frontend
+### 3. Start Frontend (GUI)
 ```bash
 cd frontend && yarn start
 ```
-Backstage will be available on http://localhost:3000
+Backstage app with AI agent dashboard on `http://localhost:3000`
 
-### 4. Test Integration
-1. Navigate to http://localhost:3000/temporal
-2. Click "Start HelloBackstage Workflow"
-3. Monitor workflow status in the table
-4. View detailed workflow execution in Temporal UI at http://localhost:8080
+### 4. Test AI Agent Workflows
+**Via GUI:**
+1. Navigate to `http://localhost:3000/temporal`
+2. Select workflow type (AI Orchestration, Multi-Agent, Compliance)
+3. Click "Start [Workflow Type]" and monitor execution
 
-## Development Scripts
-
-### Start Full Development Environment
+**Via CLI:**
 ```bash
-./scripts/dev.sh
+cd cli && go run main.go skill invoke compliance-check vm-web-server-001 SOC2
 ```
-This automatically starts the infrastructure and frontend.
 
-### Build Docker Images
+**Via REST API:**
 ```bash
-./scripts/build.sh
+curl -X POST http://localhost:8081/workflow/start-ai-orchestration \
+  -H "Content-Type: application/json"
 ```
-Builds both backend and frontend Docker images.
 
-## Example Workflow
+## 🛠️ CLI Usage
 
-The **HelloBackstageWorkflow** demonstrates:
-1. **FetchDataActivity**: Retrieves data for a given name
-2. **ProcessDataActivity**: Processes the fetched data
-3. **Retry Policy**: Automatic retries with exponential backoff
-4. **Logging**: Comprehensive activity logging
+The CLI provides comprehensive skill management and workflow control:
 
-## Repository Structure
-
-- `/backend`: Temporal worker code (Go)
-  - `main.go`: Worker with HTTP endpoints
-  - `docker-compose.yml`: Infrastructure setup
-  - `Dockerfile`: Container build configuration
-- `/frontend`: Backstage app + plugins (TypeScript)
-  - `src/plugins/temporal-integration/`: Workflow management UI
-  - `app-config.yaml`: Backstage configuration
-- `/scripts`: Dev and build automation
-- `/docs`: Documentation and notes
-
-## API Endpoints
-
-### Start Workflow
+### Skill Management
 ```bash
-curl -X POST http://localhost:8081/workflow/start
-```
-Returns: Workflow ID
+# List all available skills
+./cli skill list
 
-### Get Workflow Status
+# Get detailed skill information
+./cli skill info compliance-check
+
+# Invoke a skill with arguments
+./cli skill invoke compliance-check vm-web-server-001 SOC2 high
+
+# Use slash syntax for skills
+./cli /compliance-check vm-web-server-001
+```
+
+### Interactive Mode
 ```bash
-curl "http://localhost:8081/workflow/status?id=<workflow_id>"
+./cli interactive
 ```
-Returns: Workflow status (RUNNING, COMPLETED, FAILED, etc.)
+Available commands:
+- `skill <name> [args]` - Invoke skills
+- `skills list` - List available skills
+- `skills info <name>` - Get skill details
+- `start <type>` - Start workflows
+- `status <id>` - Check workflow status
+- `signal <id> <name> <value>` - Send signals
+- `health` - Check server health
 
-## Configuration
+### Workflow Management
+```bash
+# Start different workflow types
+./cli workflow start ai-orchestration
+./cli workflow start multi-agent
+./cli workflow start compliance
 
-### Backend Configuration
-- Temporal Server: localhost:7233
-- Task Queue: backstage-task-queue
-- HTTP Server: localhost:8081
+# Monitor workflow status
+./cli workflow status <workflow-id>
 
-### Frontend Configuration
-- Backstage: http://localhost:3000
-- Temporal UI: http://localhost:8080
-- Backend API: http://localhost:8081
+# Send signals to running workflows
+./cli workflow signal <workflow-id> approval true
+```
 
-## Testing
+## 🔌 API Endpoints
+
+### REST APIs
+```bash
+# Start workflows
+POST /workflow/start-ai-orchestration
+POST /workflow/start-multi-agent
+POST /workflow/start-compliance
+
+# Workflow management
+GET /workflow/status?id=<workflow_id>
+POST /workflow/signal/<workflow_id>
+
+# Skill execution
+POST /api/skills/{skill_name}/execute
+GET /api/skills
+GET /api/skills/{skill_name}
+
+# MCP integration
+POST /mcp
+GET /mcp/resources
+GET /mcp/tools
+
+# Health and monitoring
+GET /health
+GET /metrics
+```
+
+### MCP Server
+The MCP server provides standardized AI tool integration:
+- **Tools**: start_compliance_workflow, get_workflow_status, signal_workflow, get_infrastructure_info
+- **Resources**: workflow_results, agent_capabilities, compliance_reports
+- **Protocol**: JSON-RPC 2.0 over WebSocket/HTTP
+
+## 📁 Repository Structure
+
+```
+repo/
+├── AGENTS.md              # Agent behavior rules
+├── SKILL.md               # AI skill definitions
+├── backend/               # Go Temporal workflows
+│   ├── activities/        # AI agent activities
+│   ├── mcp/              # MCP server implementation
+│   └── main.go           # Multi-interface server
+├── frontend/              # React/TypeScript Backstage
+│   ├── src/components/   # WebMCP client, AgentManagement
+│   └── plugins/          # Temporal integration plugin
+├── cli/                  # Command-line interface
+├── tools/                # Tool safety configurations
+│   ├── bash.yaml         # Bash command restrictions
+│   ├── git.yaml          # Git operation limits
+│   ├── kubectl.yaml      # Kubernetes inspection
+│   ├── terraform.yaml    # Infrastructure planning
+│   └── docker.yaml       # Container management
+├── docs/                 # Documentation and guides
+└── scripts/              # Development automation
+```
+
+## 🏃‍♂️ Development Scripts
+
+### Full Environment
+```bash
+./scripts/dev.sh    # Start infrastructure + frontend
+```
+
+### Build Everything
+```bash
+./scripts/build.sh  # Docker images for all components
+```
+
+### Validation
+```bash
+./scripts/validate.sh  # Comprehensive environment check
+```
+
+## 🔒 Coordination Layer
+
+### AGENTS.md
+Global agent operating manual defining:
+- **Repository Access Rules**: Allowed/forbidden directories and operations
+- **Workflow Execution Rules**: Safe execution patterns and error handling
+- **Code Generation Standards**: TypeScript/JavaScript best practices
+- **Security Constraints**: Command restrictions and data protection
+- **Interface-Specific Rules**: REST API, MCP, CLI, GUI guidelines
+
+### SKILL.md
+Structured skill definitions with:
+- **Input/Output Schemas**: Standardized parameters and returns
+- **Tool Requirements**: Required permissions and resources
+- **Usage Examples**: Concrete invocation patterns
+- **Error Handling**: Failure modes and recovery
+
+### Tool Configurations
+Safe execution boundaries:
+- **bash.yaml**: npm, git, docker, terraform commands with restrictions
+- **git.yaml**: Read-only operations (status, diff, log, blame)
+- **kubectl.yaml**: Cluster inspection without destructive operations
+- **terraform.yaml**: Planning/safety operations only
+- **docker.yaml**: Container inspection with resource limits
+
+## 🧪 Testing
 
 ### Backend Tests
 ```bash
-cd backend && go test
+cd backend && go test ./...
 ```
 
 ### Frontend Tests
@@ -124,39 +260,115 @@ cd backend && go test
 cd frontend && yarn test
 ```
 
-## Troubleshooting
+### CLI Tests
+```bash
+cd cli && go test ./...
+```
+
+### Integration Tests
+```bash
+./scripts/validate.sh
+```
+
+## 🔍 Monitoring & Observability
+
+### Temporal UI
+- **Workflow Execution**: Real-time workflow visualization at `http://localhost:8080`
+- **Activity Logs**: Detailed execution history and performance metrics
+- **Worker Status**: Health and capacity monitoring
+
+### Agent Dashboard
+- **Workflow Status Table**: Real-time execution monitoring
+- **Performance Metrics**: Agent execution times and success rates
+- **Resource Health**: Infrastructure utilization and compliance scores
+
+### Audit Trails
+- **Complete Workflow History**: All executions with full context
+- **Agent Decisions**: Reasoning and decision logs
+- **Compliance Reports**: Regulatory compliance validation results
+
+## 🐛 Troubleshooting
 
 ### Docker Issues
-- Ensure Docker daemon is running
-- Check port conflicts (5432, 7233, 8080, 8081, 3000)
+```bash
+# Check container status
+docker-compose ps
+
+# View logs
+docker-compose logs temporal
+docker-compose logs postgres
+
+# Restart services
+docker-compose restart
+```
 
 ### Backend Issues
-- Verify Temporal server is running: `docker-compose ps`
-- Check logs: `docker-compose logs temporal`
+```bash
+# Check Temporal connectivity
+curl http://localhost:7233/health
+
+# Verify worker registration
+docker-compose logs temporal | grep "Worker registered"
+```
+
+### CLI Issues
+```bash
+# Test basic connectivity
+./cli health
+
+# Check skill availability
+./cli skills list
+```
 
 ### Frontend Issues
-- Clear node_modules and reinstall: `rm -rf node_modules && yarn install`
-- Check configuration in app-config.yaml
+```bash
+# Clear cache and reinstall
+cd frontend && rm -rf node_modules && yarn install
 
-## Extensions
+# Check configuration
+cat frontend/app-config.yaml
+```
 
-This sandbox is designed for experimentation and can be extended with:
+## 🚀 Extensions & Integration
 
-- **AI Agent Integration**: Add intelligent workflow orchestration
-- **Multi-cloud Hooks**: AWS Proton, Azure Foundry integrations
-- **GitHub Actions CI**: Automated testing and deployment
-- **Additional Workflows**: Complex business logic examples
-- **Enhanced UI**: Advanced workflow visualization and management
+### AI Assistant Integration
+- **Claude Skills**: Direct skill invocation via `/skill-name` syntax
+- **Codex Skills**: GitHub Copilot integration with workflow orchestration
+- **Custom GPTs**: ChatGPT plugin for workflow management
+
+### Enterprise Integration
+- **GitHub Actions**: CI/CD pipelines with workflow triggers
+- **Slack/Discord Bots**: Real-time workflow notifications
+- **Jira Integration**: Ticket-based workflow initiation
+- **ServiceNow**: IT service management integration
+
+### Advanced Workflows
+- **Multi-Cloud Orchestration**: Cross-provider infrastructure management
+- **Compliance Automation**: Automated regulatory compliance checking
+- **Security Scanning**: Continuous security posture analysis
+- **Cost Optimization**: Automated resource optimization workflows
 
 ---
 
-## Open-source software
+## 📚 Documentation
 
-https://github.com/lloydchang/sandbox-backstage-temporal
+- **[AGENTS.md](AGENTS.md)**: Agent operating manual and behavior rules
+- **[SKILL.md](SKILL.md)**: AI skill definitions and usage patterns
+- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)**: Technical implementation details
+- **[docs/](docs/)**: Additional guides and specifications
+
+## 🤝 Contributing
+
+This is an AI-native engineering platform designed for:
+- **Safe experimentation** with AI agents and workflows
+- **Multi-interface development** supporting various integration patterns
+- **Enterprise-grade orchestration** with durable execution guarantees
+- **Regulatory compliance** built into the core architecture
+
+## 📄 License
+
+[GNU Affero General Public License v3.0 or later](LICENSE)
 
 ---
 
-## License
-
-[GNU Affero General Public License v3.0 or later](https://github.com/lloydchang/sandbox-backstage-temporal/blob/main/LICENSE)
-
+**Open Source**: https://github.com/lloydchang/sandbox-backstage-temporal
