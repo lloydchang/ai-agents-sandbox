@@ -49,6 +49,13 @@ PostgreSQL + Temporal Server
 - **Infrastructure Emulation**: Safe simulation of AWS, Azure, GCP resources
 - **MCP Integration**: Standardized Model Context Protocol for tool interoperability
 
+### 🔧 Skills System (Claude/Codex Compatible)
+- **SKILL.md Format**: YAML frontmatter + markdown content based on Claude Code specifications
+- **Automatic Discovery**: Scans `.agents/skills/` directories with priority-based conflict resolution
+- **Skill Execution**: Argument substitution, forked contexts, and tool restrictions
+- **Core Skills**: compliance-check, security-scan, cost-analysis, workflow-management
+- **Multi-Interface Support**: CLI (`/skill-name`), GUI, API, and AI assistant integration
+
 ### 🔧 Multiple Interfaces
 - **REST APIs**: Full programmatic access to workflows and agent capabilities
 - **MCP Server**: Standardized Model Context Protocol for AI tool interoperability
@@ -92,6 +99,12 @@ cd frontend && yarn start
 Backstage app with AI agent dashboard on `http://localhost:3000`
 
 ### 4. Test AI Agent Workflows
+**Via Web UI (Skills):**
+1. Navigate to `http://localhost:3000/skills`
+2. Browse available skills (compliance-check, security-scan, cost-analysis, workflow-management)
+3. Click "Execute" on any skill with arguments
+4. Monitor execution results and status
+
 **Via GUI:**
 1. Navigate to `http://localhost:3000/temporal`
 2. Select workflow type (AI Orchestration, Multi-Agent, Compliance)
@@ -115,24 +128,24 @@ The CLI provides comprehensive skill management and workflow control:
 ### Skill Management
 ```bash
 # List all available skills
-./cli skill list
+temporal-agents skill list
 
 # Get detailed skill information
-./cli skill info compliance-check
+temporal-agents skill info compliance-check
 
 # Invoke a skill with arguments
-./cli skill invoke compliance-check vm-web-server-001 SOC2 high
+temporal-agents skill invoke compliance-check vm-web-server-001 SOC2 high
 
-# Use slash syntax for skills
-./cli /compliance-check vm-web-server-001
+# Use slash syntax for skills (Claude/Codex compatible)
+temporal-agents skill invoke /compliance-check vm-web-server-001
 ```
 
 ### Interactive Mode
 ```bash
-./cli interactive
+temporal-agents --interactive
 ```
 Available commands:
-- `skill <name> [args]` - Invoke skills
+- `skill <name> [args]` - Invoke skills with `/skill-name` syntax
 - `skills list` - List available skills
 - `skills info <name>` - Get skill details
 - `start <type>` - Start workflows
@@ -167,10 +180,12 @@ POST /workflow/start-compliance
 GET /workflow/status?id=<workflow_id>
 POST /workflow/signal/<workflow_id>
 
-# Skill execution
-POST /api/skills/{skill_name}/execute
-GET /api/skills
-GET /api/skills/{skill_name}
+# Skills management
+GET /api/skills                           # List all skills
+GET /api/skills/invocable                 # List user-invocable skills
+GET /api/skills/{skill_name}              # Get skill details
+POST /api/skills/{skill_name}/execute     # Execute skill with arguments
+POST /api/skills/discover                 # Trigger skill discovery
 
 # MCP integration
 POST /mcp
@@ -194,21 +209,38 @@ The MCP server provides standardized AI tool integration:
 repo/
 ├── AGENTS.md              # Agent behavior rules
 ├── SKILL.md               # AI skill definitions
+├── .agents/               # Skills directory structure
+│   └── skills/            # Skill definitions (Claude/Codex compatible)
+│       ├── compliance-check/
+│       │   ├── SKILL.md          # Compliance checking skill
+│       │   ├── scripts/          # Supporting scripts
+│       │   └── templates/        # Output templates
+│       ├── security-scan/        # Security analysis skill
+│       ├── cost-analysis/        # Cost optimization skill
+│       └── workflow-management/  # Workflow control skill
 ├── backend/               # Go Temporal workflows
 │   ├── activities/        # AI agent activities
+│   ├── skills/            # Skills system implementation
+│   │   ├── skill.go       # Skill parsing and management
+│   │   └── service.go     # HTTP API for skills
 │   ├── mcp/              # MCP server implementation
 │   └── main.go           # Multi-interface server
 ├── frontend/              # React/TypeScript Backstage
-│   ├── src/components/   # WebMCP client, AgentManagement
+│   ├── src/components/
+│   │   ├── SkillsManagement.tsx  # Skills UI component
+│   │   └── AgentManagement.tsx   # Workflow management
 │   └── plugins/          # Temporal integration plugin
-├── cli/                  # Command-line interface
+├── cli/                  # Command-line interface with skills
 ├── tools/                # Tool safety configurations
 │   ├── bash.yaml         # Bash command restrictions
 │   ├── git.yaml          # Git operation limits
 │   ├── kubectl.yaml      # Kubernetes inspection
 │   ├── terraform.yaml    # Infrastructure planning
 │   └── docker.yaml       # Container management
-├── docs/                 # Documentation and guides
+├── docs/
+│   ├── skills-system-guide.md    # Complete skills documentation
+│   ├── comprehensive-interfaces-guide.md
+│   └── claude-and-codex-skills.txt
 └── scripts/              # Development automation
 ```
 
@@ -360,6 +392,7 @@ cat frontend/app-config.yaml
 
 - **[AGENTS.md](AGENTS.md)**: Agent operating manual and behavior rules
 - **[SKILL.md](SKILL.md)**: AI skill definitions and usage patterns
+- **[docs/skills-system-guide.md](docs/skills-system-guide.md)**: Complete skills system documentation (Claude/Codex compatible)
 - **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)**: Technical implementation details
 - **[docs/comprehensive-interfaces-guide.md](docs/comprehensive-interfaces-guide.md)**: Complete interfaces documentation (SKILL.md, AGENTS.md, MCP, APIs, CLIs, GUIs)
 - **[docs/claude-and-codex-skills.txt](docs/claude-and-codex-skills.txt)**: AI assistant skills and workflows reference
