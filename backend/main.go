@@ -196,7 +196,7 @@ func main() {
 	log.Printf("Infrastructure emulator initialized")
 
 	// Initialize skills service
-	skillService := skills.NewSkillService("..", "session-"+time.Now().Format("20060102150405"))
+	skillService := skills.NewSkillService(".", "session-"+time.Now().Format("20060102150405"))
 	log.Printf("Skills service initialized with %d skills", len(skillService.GetManager().ListSkills()))
 
 	// Initialize monitoring system

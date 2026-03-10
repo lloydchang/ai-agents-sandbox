@@ -1,10 +1,11 @@
 ---
 name: security-analysis
 description: Perform comprehensive security analysis with dynamic context injection. Use when scanning for vulnerabilities, analyzing security posture, or responding to security incidents.
-argument-hint: [targetResource] [scanType] [priority]
+argument-hint: "[targetResource] [scanType] [priority]"
 context: fork
 agent: Explore
-allowed-tools: Bash(nmap *, nikto *, sqlmap *, metasploit *, curl *, wget *)
+allowed-tools: 
+  - "Bash(nmap *, nikto *, sqlmap *, metasploit *, curl *, wget *)"
 ---
 
 # Security Analysis Skill

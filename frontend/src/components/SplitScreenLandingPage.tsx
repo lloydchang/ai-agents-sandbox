@@ -11,38 +11,34 @@ export const SplitScreenLandingPage: React.FC = () => {
   const features = [
     {
       icon: <ViewColumn fontSize="large" />,
+      title: 'AI Agent Skills',
+      description: '.claude skills',
+      path: '/skills'
+    },
+    {
+      icon: <Timeline fontSize="large" />,
       title: 'Split Screen View',
       description: 'View Backstage and Temporal side-by-side for seamless workflow management',
       path: '/split-screen'
     },
     {
-      icon: <Timeline fontSize="large" />,
+      icon: <AccountTree fontSize="large" />,
       title: 'Temporal Workflows',
       description: 'Manage and monitor your Temporal workflows with advanced AI agent orchestration',
       path: '/temporal'
     },
     {
-      icon: <AccountTree fontSize="large" />,
+      icon: <Speed fontSize="large" />,
       title: 'Backstage Catalog',
       description: 'Explore your software catalog and manage components, APIs, and infrastructure',
       path: '/catalog'
-    },
-    {
-      icon: <Speed fontSize="large" />,
-      title: 'AI Agent Integration',
-      description: 'Leverage AI agents for automated compliance, security, and cost optimization',
-      path: '/skills'
     }
   ];
 
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h3" gutterBottom align="center">
-        Backstage + Temporal AI Agent Sandbox
-      </Typography>
-      
-      <Typography variant="h6" color="textSecondary" paragraph align="center">
-        Experiment with AI-powered workflows in a safe, local environment
+        ai agents sandbox - a playground for multiple ai agents in a local garden
       </Typography>
 
       <Grid container spacing={4} sx={{ mt: 2 }}>
@@ -89,27 +85,6 @@ export const SplitScreenLandingPage: React.FC = () => {
         ))}
       </Grid>
 
-      <Box sx={{ mt: 6, p: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
-        <Typography variant="h5" gutterBottom>
-          Quick Start Guide
-        </Typography>
-        
-        <Typography variant="body1" paragraph>
-          1. <strong>Split Screen</strong>: Use the split-screen view to work with both Backstage and Temporal simultaneously
-        </Typography>
-        
-        <Typography variant="body1" paragraph>
-          2. <strong>Mobile Friendly</strong>: On mobile devices, toggle between Backstage and Temporal views
-        </Typography>
-        
-        <Typography variant="body1" paragraph>
-          3. <strong>AI Workflows</strong>: Start AI agent workflows for compliance, security, and cost optimization scenarios
-        </Typography>
-        
-        <Typography variant="body1">
-          4. <strong>Real-time Monitoring</strong>: Monitor workflow execution and agent performance in real-time
-        </Typography>
-      </Box>
     </Box>
   );
 };

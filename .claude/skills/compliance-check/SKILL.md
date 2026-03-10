@@ -1,10 +1,14 @@
 ---
 name: compliance-check
 description: Start and monitor compliance checks for SOC2, GDPR, HIPAA standards. Use when verifying infrastructure compliance, preparing for audits, or ensuring regulatory requirements are met.
-argument-hint: [targetResource] [complianceType] [priority]
+argument-hint: "[targetResource] [complianceType] [priority]"
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Bash, Read, Write, Grep
+allowed-tools: 
+  - Bash
+  - Read
+  - Write
+  - Grep
 ---
 
 # Compliance Check Skill

@@ -1,8 +1,9 @@
 ---
 name: infrastructure-discovery
 description: Discover and visualize infrastructure resources with interactive HTML output. Use when exploring new environments, understanding resource relationships, or creating infrastructure documentation.
-argument-hint: [resourceType] [environment] [outputFormat]
-allowed-tools: Bash(python *)
+argument-hint: "[resourceType] [environment] [outputFormat]"
+allowed-tools: 
+  - "Bash(python *)"
 ---
 
 # Infrastructure Discovery Skill

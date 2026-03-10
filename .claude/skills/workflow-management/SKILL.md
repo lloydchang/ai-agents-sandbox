@@ -1,10 +1,14 @@
 ---
 name: workflow-management
 description: Orchestrate and monitor Temporal AI Agent workflows. Use when managing multiple concurrent workflows, checking status, or coordinating complex multi-agent operations.
-argument-hint: [action] [workflowId] [parameters]
+argument-hint: "[action] [workflowId] [parameters]"
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Bash, Read, Write, Grep
+allowed-tools: 
+  - Bash
+  - Read
+  - Write
+  - Grep
 ---
 
 # Workflow Management Skill

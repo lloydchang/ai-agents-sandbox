@@ -1,7 +1,7 @@
 ---
 name: cost-optimization
 description: Analyze and optimize cloud infrastructure costs using specialized subagent. Use when reviewing spending, identifying savings opportunities, or planning cost reduction strategies.
-argument-hint: [targetResource] [analysisType] [timeframe]
+argument-hint: "[targetResource] [analysisType] [timeframe]"
 context: fork
 agent: Plan
 disable-model-invocation: false
