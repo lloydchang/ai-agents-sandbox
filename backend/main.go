@@ -17,14 +17,17 @@ import (
 	
 	// Import our custom packages
 	"github.com/lloydchang/ai-agents-sandbox/backend/activities"
+	"github.com/lloydchang/ai-agents-sandbox/backend/bedrock"
 	"github.com/lloydchang/ai-agents-sandbox/backend/config"
 	"github.com/lloydchang/ai-agents-sandbox/backend/emulators"
 	"github.com/lloydchang/ai-agents-sandbox/backend/humanloop"
 	"github.com/lloydchang/ai-agents-sandbox/backend/monitoring"
+	"github.com/lloydchang/ai-agents-sandbox/backend/multimodel"
 	"github.com/lloydchang/ai-agents-sandbox/backend/performance"
 	"github.com/lloydchang/ai-agents-sandbox/backend/ragai"
 	"github.com/lloydchang/ai-agents-sandbox/backend/security"
 	"github.com/lloydchang/ai-agents-sandbox/backend/skills"
+	"github.com/lloydchang/ai-agents-sandbox/backend/websocket"
 	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 	"github.com/lloydchang/ai-agents-sandbox/backend/workflows"
 )
@@ -230,6 +233,7 @@ func main() {
 	w.RegisterWorkflow(workflows.ConversationalAgentWorkflow)
 	w.RegisterWorkflow(workflows.GoalBasedAgentWorkflow)
 	w.RegisterWorkflow(workflows.ReActAgentWorkflow)
+	w.RegisterWorkflow(workflows.DeepResearchWorkflow)
 	w.RegisterWorkflow(humanloop.EnhancedHumanInTheLoopWorkflow)
 	w.RegisterWorkflow(performance.OptimizedWorkflow)
 	w.RegisterWorkflow(performance.PerformanceMonitoringWorkflow)
@@ -263,6 +267,64 @@ func main() {
 	w.RegisterActivity(activities.GenerateReActObservationActivity)
 	w.RegisterActivity(activities.AnalyzeReActPerformanceActivity)
 	w.RegisterActivity(activities.ValidateReActStepActivity)
+	
+	// Register research activities
+	w.RegisterActivity(activities.GenerateResearchPlanActivity)
+	w.RegisterActivity(activities.DiscoverWebSourcesActivity)
+	w.RegisterActivity(activities.DiscoverDatabaseSourcesActivity)
+	w.RegisterActivity(activities.BuildKnowledgeGraphActivity)
+	w.RegisterActivity(activities.AnalyzeContentActivity)
+	w.RegisterActivity(activities.AnalyzePatternsActivity)
+	w.RegisterActivity(activities.AnalyzeSentimentActivity)
+	w.RegisterActivity(activities.GenerateSynthesisActivity)
+	w.RegisterActivity(activities.StreamResearchEventsActivity)
+	w.RegisterActivity(activities.ValidateResearchSourceActivity)
+	w.RegisterActivity(activities.CalculateResearchQualityActivity)
+	
+	// Register Bedrock activities (using the activities instance)
+	w.RegisterActivity(bedrockActivities.GenerateTextWithBedrockActivity)
+	w.RegisterActivity(bedrockActivities.ConductConversationWithBedrockActivity)
+	w.RegisterActivity(bedrockActivities.AnalyzeWithBedrockActivity)
+	w.RegisterActivity(bedrockActivities.SummarizeWithBedrockActivity)
+	w.RegisterActivity(bedrockActivities.TranslateWithBedrockActivity)
+	w.RegisterActivity(bedrockActivities.ClassifyWithBedrockActivity)
+	w.RegisterActivity(bedrockActivities.GetBedrockModelsActivity)
+	w.RegisterActivity(bedrockActivities.ValidateBedrockRequestActivity)
+	w.RegisterActivity(bedrockActivities.ValidateBedrockConversationActivity)
+	w.RegisterActivity(bedrockActivities.CompareModelsActivity)
+	
+	// Register WebSocket activities
+	w.RegisterActivity(websocketActivities.BroadcastWorkflowUpdateActivity)
+	w.RegisterActivity(websocketActivities.BroadcastAgentUpdateActivity)
+	w.RegisterActivity(websocketActivities.BroadcastSystemUpdateActivity)
+	w.RegisterActivity(websocketActivities.StartWorkflowMonitoringActivity)
+	w.RegisterActivity(websocketActivities.StartAgentMonitoringActivity)
+	w.RegisterActivity(websocketActivities.StartSystemMonitoringActivity)
+	w.RegisterActivity(websocketActivities.GetConnectedClientsActivity)
+	w.RegisterActivity(websocketActivities.BroadcastCustomMessageActivity)
+	w.RegisterActivity(websocketActivities.SendProgressUpdateActivity)
+	w.RegisterActivity(websocketActivities.SendAgentLifecycleActivity)
+	w.RegisterActivity(websocketActivities.BroadcastErrorActivity)
+	w.RegisterActivity(websocketActivities.BroadcastMetricsActivity)
+	w.RegisterActivity(websocketActivities.ValidateWebSocketConnectionActivity)
+	w.RegisterActivity(websocketActivities.CreateNotificationActivity)
+	w.RegisterActivity(websocketActivities.SendHeartbeatActivity)
+	
+	// Register multi-model activities
+	w.RegisterActivity(multiModelActivities.ProcessMultiModelRequestActivity)
+	w.RegisterActivity(multiModelActivities.GetAvailableModelsActivity)
+	w.RegisterActivity(multiModelActivities.GetModelsByProviderActivity)
+	w.RegisterActivity(multiModelActivities.GetModelsByCapabilityActivity)
+	w.RegisterActivity(multiModelActivities.CompareModelsActivity)
+	w.RegisterActivity(multiModelActivities.EnsembleModelsActivity)
+	w.RegisterActivity(multiModelActivities.SelectBestModelActivity)
+	w.RegisterActivity(multiModelActivities.ValidateMultiModelRequestActivity)
+	w.RegisterActivity(multiModelActivities.GetModelStatisticsActivity)
+	w.RegisterActivity(multiModelActivities.EnableModelActivity)
+	w.RegisterActivity(multiModelActivities.DisableModelActivity)
+	w.RegisterActivity(multiModelActivities.UpdateModelPriorityActivity)
+	w.RegisterActivity(multiModelActivities.BenchmarkModelsActivity)
+	w.RegisterActivity(multiModelActivities.GetModelRecommendationsActivity)
 
 	// Register monitoring activities
 	w.RegisterActivity(monitoring.RecordWorkflowMetricsActivity)
@@ -309,11 +371,44 @@ func main() {
 	// Initialize RAG AI handler
 	ragAIHandler := ragai.NewRagAIHandler()
 	
+	// Initialize Bedrock handler
+	bedrockHandler, err := bedrock.NewBedrockHandler("us-west-2")
+	if err != nil {
+		log.Fatal("Unable to create Bedrock handler", err)
+	}
+	
+	// Initialize WebSocket handler
+	websocketHandler := websocket.NewWebSocketHandler()
+	
+	// Start WebSocket hub in background
+	go websocketHandler.GetHub().Run()
+	
+	// Initialize Bedrock activities
+	bedrockActivities, err := activities.NewBedrockActivities("us-west-2")
+	if err != nil {
+		log.Fatal("Unable to create Bedrock activities", err)
+	}
+	
+	// Initialize WebSocket activities
+	websocketActivities := activities.NewWebSocketActivities(websocketHandler.GetHub())
+	
+	// Initialize multi-model manager
+	multiModelManager := multimodel.NewMultiModelManager(bedrockClient)
+	
+	// Initialize multi-model activities
+	multiModelActivities := activities.NewMultiModelActivities(multiModelManager)
+	
 	// Register skill service routes
 	skillService.RegisterRoutes(r)
 	
 	// Register RAG AI routes
 	ragAIHandler.RegisterRoutes(r.PathPrefix("/api/rag-ai").Subrouter())
+	
+	// Register Bedrock routes
+	bedrockHandler.RegisterRoutes(r.PathPrefix("/api/bedrock").Subrouter())
+	
+	// Register WebSocket routes
+	r.HandleFunc("/ws", websocketHandler.HandleWebSocket)
 
 	// Add explicit OPTIONS handlers for CORS preflight
 	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {
@@ -956,6 +1051,136 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
+	}).Methods("GET")
+
+	// Research workflow endpoints
+	r.HandleFunc("/research/start", func(w http.ResponseWriter, r *http.Request) {
+		var request workflows.ResearchRequest
+		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		// Set default values
+		if request.MaxSources == 0 {
+			request.MaxSources = 20
+		}
+		if request.MaxDepth == 0 {
+			request.MaxDepth = 3
+		}
+		if request.LLMProvider == "" {
+			request.LLMProvider = "openai"
+		}
+		if request.LLMModel == "" {
+			request.LLMModel = "gpt-4"
+		}
+		if request.ResearchType == "" {
+			request.ResearchType = "deep"
+		}
+		if request.Context == nil {
+			request.Context = make(map[string]interface{})
+		}
+
+		// Start research workflow
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        fmt.Sprintf("research-%d", time.Now().Unix()),
+			TaskQueue: "ai-agent-task-queue",
+		}, workflows.DeepResearchWorkflow, request)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]interface{}{
+			"workflowId":   we.GetID(),
+			"runId":        we.GetRunID(),
+			"status":       "started",
+			"query":        request.Query,
+			"researchType": request.ResearchType,
+			"maxSources":   request.MaxSources,
+			"startedAt":    time.Now().Format(time.RFC3339),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+	}).Methods("POST")
+
+	r.HandleFunc("/research/{workflowId}/status", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		workflowID := vars["workflowID"]
+		includeDetails := r.URL.Query().Get("includeDetails") == "true"
+
+		// Query research state
+		response, err := c.QueryWorkflow(context.Background(), workflowID, "", "GetResearchStateQuery")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var state workflows.ResearchState
+		if err := response.Get(&state); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		result := map[string]interface{}{
+			"workflowId":       workflowID,
+			"query":            state.Query,
+			"researchType":     state.ResearchType,
+			"currentPhase":     state.CurrentPhase,
+			"status":           state.Status,
+			"sourceCount":      len(state.Sources),
+			"findingCount":     len(state.Findings),
+			"nodeCount":        len(state.KnowledgeGraph),
+			"eventCount":       len(state.EventStream),
+			"agentCount":       len(state.AgentCollaboration),
+			"startTime":        state.StartTime.Format(time.RFC3339),
+			"endTime":          state.EndTime.Format(time.RFC3339),
+			"llmProvider":      state.LLMProvider,
+			"llmModel":         state.LLMModel,
+		}
+
+		if includeDetails {
+			result["sources"] = state.Sources
+			result["findings"] = state.Findings
+			result["knowledgeGraph"] = state.KnowledgeGraph
+			result["synthesis"] = state.Synthesis
+			result["eventStream"] = state.EventStream
+			result["agentCollaboration"] = state.AgentCollaboration
+			result["context"] = state.Context
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
+	}).Methods("GET")
+
+	r.HandleFunc("/research/{workflowId}/quality", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		workflowID := vars["workflowID"]
+
+		// Query research state
+		response, err := c.QueryWorkflow(context.Background(), workflowID, "", "GetResearchStateQuery")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var state workflows.ResearchState
+		if err := response.Get(&state); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Calculate quality metrics
+		var quality map[string]interface{}
+		err = workflow.ExecuteActivity(ctx, activities.CalculateResearchQualityActivity, state).Get(ctx, &quality)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(quality)
 	}).Methods("GET")
 
 	log.Printf("Starting enhanced HTTP server on :8081")

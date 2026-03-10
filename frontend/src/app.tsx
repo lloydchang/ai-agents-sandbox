@@ -8,15 +8,15 @@ import { SplitScreenPage } from './components/SplitScreenPage';
 import { SplitScreenLandingPage } from './components/SplitScreenLandingPage';
 import SkillsManagement from './components/SkillsManagement';
 
-// Import RAG AI plugin
-import { ragAiPlugin, RagAiPage } from './plugins/rag-ai';
+// Import RAG AI component
+import { RagAiPage } from './plugins/rag-ai';
 
 // Import catalog plugin
 import { CatalogEntityPage, CatalogIndexPage } from '@backstage/plugin-catalog';
 
 const app = createApp({
   apis: [],
-  plugins: [ragAiPlugin],
+  plugins: [],
 });
 
 const App = app.createRoot(
