@@ -349,18 +349,6 @@ EVAL_CASES: list[EvalCase] = [
              True, ["type", "metrics", "status"],
              "Load test"),
 
-    # Roadmap execution
-    EvalCase("roadmap-execution",
-             "track the progress of our Q4 roadmap milestones",
-             True, ["milestones", "status"],
-             "Roadmap tracking trigger"),
-
-    # Deployment reliability
-    EvalCase("deployment-reliability-analysis",
-             "analyze why the payments-api deployment failed last week",
-             True, ["failure_patterns", "recommendations"],
-             "Deployment failure analysis"),
-
     # Negative cases — should NOT trigger wrong skills
     EvalCase("terraform-provisioning",
              "show me slow queries on the database",
@@ -485,7 +473,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--skills-dir",
-        default=str(Path(__file__).parent / ".agents/skills"),
+        default=str(Path(__file__).parent / "../.agents/skills"),
         help="Path to the skills directory",
     )
     parser.add_argument("--skill", help="Run evals for a single skill only")

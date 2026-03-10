@@ -59,10 +59,10 @@ For comprehensive development and testing, run these validation steps:
 
 ```bash
 # 1. Validate environment and skill suite integrity
-./bootstrap.sh
+./scripts/bootstrap.sh
 
 # 2. Run skill evaluations and tests
-python3 eval/run_evals.py
+python3 scripts/run_evals.py
 
 # 3. Start development environment
 ./scripts/dev.sh
