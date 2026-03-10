@@ -12,7 +12,7 @@ export const SplitScreenLandingPage: React.FC = () => {
     {
       icon: <ViewColumn fontSize="large" />,
       title: 'AI Agent Skills',
-      description: '.claude skills',
+      description: '.agents/skills/ and .claude/skills/',
       path: '/skills'
     },
     {
