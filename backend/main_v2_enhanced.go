@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,6 +23,7 @@ import (
 	"github.com/lloydchang/backstage-temporal/backend/config"
 	"github.com/lloydchang/backstage-temporal/backend/emulators"
 	"github.com/lloydchang/backstage-temporal/backend/humanloop"
+	"github.com/lloydchang/backstage-temporal/backend/mcp"
 	"github.com/lloydchang/backstage-temporal/backend/monitoring"
 	"github.com/lloydchang/backstage-temporal/backend/performance"
 	"github.com/lloydchang/backstage-temporal/backend/security"
@@ -38,6 +41,17 @@ type AppConfig struct {
 	MaxConcurrent     int           `json:"maxConcurrent"`
 	ShutdownTimeout   time.Duration `json:"shutdownTimeout"`
 	LogLevel          string        `json:"logLevel"`
+	
+	// MCP Configuration
+	EnableMCP         bool          `json:"enableMCP"`
+	MCPServerName     string        `json:"mcpServerName"`
+	MCPServerVersion  string        `json:"mcpServerVersion"`
+	MCPTransport      string        `json:"mcpTransport"`
+	MCPPort           string        `json:"mcpPort"`
+	MCPEnableAuth     bool          `json:"mcpEnableAuth"`
+	MCPAPIKey         string        `json:"mcpApiKey"`
+	MCPAllowedTools   []string      `json:"mcpAllowedTools"`
+	MCPAllowedResources []string    `json:"mcpAllowedResources"`
 }
 
 // Global application state
@@ -47,6 +61,7 @@ type AppState struct {
 	worker           worker.Worker
 	metricsCollector monitoring.MetricsCollector
 	securityManager  security.SecurityManager
+	mcpServer        *mcp.MCPServer
 	shutdownOnce     sync.Once
 }
 
@@ -226,6 +241,15 @@ func (app *AppState) shutdown() {
 	app.shutdownOnce.Do(func() {
 		log.Println("Initiating graceful shutdown...")
 		
+		// Stop MCP server if running
+		if app.mcpServer != nil {
+			if err := app.mcpServer.Stop(); err != nil {
+				log.Printf("Error stopping MCP server: %v", err)
+			} else {
+				log.Println("MCP server stopped")
+			}
+		}
+		
 		if app.worker != nil {
 			app.worker.Stop()
 			log.Println("Temporal worker stopped")
@@ -358,6 +382,17 @@ func main() {
 		MaxConcurrent:   parseInt(getEnv("MAX_CONCURRENT", "10")),
 		ShutdownTimeout: parseDuration(getEnv("SHUTDOWN_TIMEOUT", "30s")),
 		LogLevel:        getEnv("LOG_LEVEL", "info"),
+		
+		// MCP Configuration
+		EnableMCP:           getEnv("ENABLE_MCP", "true") == "true",
+		MCPServerName:       getEnv("MCP_SERVER_NAME", "Temporal AI Agents"),
+		MCPServerVersion:    getEnv("MCP_SERVER_VERSION", "1.0.0"),
+		MCPTransport:        getEnv("MCP_TRANSPORT", "stdio"),
+		MCPPort:             getEnv("MCP_PORT", "8082"),
+		MCPEnableAuth:       getEnv("MCP_ENABLE_AUTH", "false") == "true",
+		MCPAPIKey:           getEnv("MCP_API_KEY", ""),
+		MCPAllowedTools:     getEnvSlice("MCP_ALLOWED_TOOLS", []string{}),
+		MCPAllowedResources: getEnvSlice("MCP_ALLOWED_RESOURCES", []string{}),
 	}
 	
 	// Initialize application state
@@ -407,6 +442,32 @@ func main() {
 	// Initialize security if enabled
 	if config.EnableSecurity {
 		appState.securityManager = security.NewSecurityManager()
+	}
+	
+	// Initialize MCP server if enabled
+	if config.EnableMCP {
+		mcpConfig := &mcp.MCPConfig{
+			ServerName:        config.MCPServerName,
+			ServerVersion:     config.MCPServerVersion,
+			TransportType:     config.MCPTransport,
+			Port:              config.MCPPort,
+			EnableAuth:        config.MCPEnableAuth,
+			APIKey:            config.MCPAPIKey,
+			AllowedTools:      config.MCPAllowedTools,
+			AllowedResources:  config.MCPAllowedResources,
+			LogLevel:          config.LogLevel,
+		}
+		
+		appState.mcpServer = mcp.NewMCPServer(c, mcpConfig)
+		
+		// Start MCP server in goroutine
+		go func() {
+			if err := appState.mcpServer.Start(context.Background()); err != nil {
+				log.Printf("MCP server failed to start: %v", err)
+			}
+		}()
+		
+		log.Printf("MCP server configured with %s transport on port %s", config.MCPTransport, config.MCPPort)
 	}
 	
 	// Start worker
@@ -570,4 +631,11 @@ func parseDuration(s string) time.Duration {
 		return d
 	}
 	return 30 * time.Second // default
+}
+
+func getEnvSlice(key string, defaultValue []string) []string {
+	if value := os.Getenv(key); value != "" {
+		return strings.Split(value, ",")
+	}
+	return defaultValue
 }
