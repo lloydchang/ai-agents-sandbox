@@ -31,7 +31,7 @@ export const SplitScreenLandingPage: React.FC = () => {
       icon: <Speed fontSize="large" />,
       title: 'AI Agent Integration',
       description: 'Leverage AI agents for automated compliance, security, and cost optimization',
-      path: '/split-screen'
+      path: '/skills'
     }
   ];
 
