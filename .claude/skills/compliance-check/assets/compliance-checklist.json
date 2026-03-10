@@ -1,0 +1,188 @@
+{
+  "SOC2": {
+    "security": {
+      "access_control": {
+        "description": "Verify proper access controls are implemented",
+        "requirements": [
+          "Multi-factor authentication for privileged access",
+          "Role-based access control (RBAC) implementation",
+          "Regular access review procedures",
+          "Least privilege principle enforcement"
+        ],
+        "validation_methods": ["configuration_review", "access_testing", "policy_audit"]
+      },
+      "encryption": {
+        "description": "Ensure data encryption at rest and in transit",
+        "requirements": [
+          "TLS 1.2+ for all network communications",
+          "AES-256 encryption for data at rest",
+          "Key management procedures",
+          "Certificate management"
+        ],
+        "validation_methods": ["crypto_scan", "certificate_audit", "key_rotation_check"]
+      },
+      "audit_trail": {
+        "description": "Comprehensive logging and monitoring",
+        "requirements": [
+          "Immutable audit logs",
+          "Log retention for 12 months",
+          "Real-time monitoring alerts",
+          "Tamper-evident logging"
+        ],
+        "validation_methods": ["log_analysis", "retention_check", "alert_testing"]
+      }
+    },
+    "availability": {
+      "disaster_recovery": {
+        "description": "Business continuity and disaster recovery",
+        "requirements": [
+          "Recovery Time Objective (RTO) < 4 hours",
+          "Recovery Point Objective (RPO) < 1 hour",
+          "Annual disaster recovery testing",
+          "Geographic redundancy"
+        ],
+        "validation_methods": ["dr_test", "rpo_rto_analysis", "redundancy_check"]
+      }
+    },
+    "processing_integrity": {
+      "data_validation": {
+        "description": "Data processing accuracy and completeness",
+        "requirements": [
+          "Input validation controls",
+          "Processing error handling",
+          "Data reconciliation procedures",
+          "Output verification"
+        ],
+        "validation_methods": ["data_integrity_test", "error_handling_review", "reconciliation_audit"]
+      }
+    }
+  },
+  "GDPR": {
+    "data_protection": {
+      "consent_management": {
+        "description": "Valid consent for data processing",
+        "requirements": [
+          "Explicit consent mechanisms",
+          "Granular consent options",
+          "Easy consent withdrawal",
+          "Consent record keeping"
+        ],
+        "validation_methods": ["consent_flow_test", "record_audit", "withdrawal_test"]
+      },
+      "data_minimization": {
+        "description": "Collect only necessary data",
+        "requirements": [
+          "Purpose limitation documentation",
+          "Data retention policies",
+          "Automated data deletion",
+          "Data mapping inventory"
+        ],
+        "validation_methods": ["data_flow_analysis", "retention_audit", "deletion_test"]
+      }
+    },
+    "subject_rights": {
+      "right_to_be_forgotten": {
+        "description": "Data deletion upon request",
+        "requirements": [
+          "30-day deletion timeline",
+          "Third-party notification",
+          "Verification of deletion",
+          "Exception documentation"
+        ],
+        "validation_methods": ["deletion_request_test", "third_party_audit", "verification_check"]
+      },
+      "data_portability": {
+        "description": "Export data in machine-readable format",
+        "requirements": [
+          "Common format support (JSON, CSV, XML)",
+          "Complete data export",
+          "Metadata inclusion",
+          "Export timeline < 30 days"
+        ],
+        "validation_methods": ["export_test", "format_validation", "timeline_measurement"]
+      }
+    },
+    "breach_notification": {
+      "incident_response": {
+        "description": "72-hour breach notification",
+        "requirements": [
+          "Breach detection procedures",
+          "Risk assessment methodology",
+          "Notification templates",
+          "Regulatory reporting"
+        ],
+        "validation_methods": ["incident_simulation", "notification_test", "timeline_validation"]
+      }
+    }
+  },
+  "HIPAA": {
+    "administrative_safeguards": {
+      "security_officer": {
+        "description": "Designated security official",
+        "requirements": [
+          "Named Security Officer",
+          "Defined responsibilities",
+          "Regular security training",
+          "Policy documentation"
+        ],
+        "validation_methods": ["personnel_review", "training_audit", "policy_check"]
+      },
+      "risk_analysis": {
+        "description": "Regular risk assessments",
+        "requirements": [
+          "Annual risk analysis",
+          "Threat identification",
+          "Vulnerability assessment",
+          "Impact analysis"
+        ],
+        "validation_methods": ["risk_assessment_review", "threat_model_audit", "vulnerability_scan"]
+      }
+    },
+    "physical_safeguards": {
+      "facility_access": {
+        "description": "Physical access controls",
+        "requirements": [
+          "Access control systems",
+          "Visitor log procedures",
+          "Emergency access protocols",
+          "Physical security training"
+        ],
+        "validation_methods": ["facility_inspection", "access_log_audit", "emergency_test"]
+      }
+    },
+    "technical_safeguards": {
+      "access_control": {
+        "description": "Technical access controls",
+        "requirements": [
+          "Unique user identification",
+          "Emergency access procedures",
+          "Automatic logoff",
+          "Encryption and decryption"
+        ],
+        "validation_methods": ["access_control_test", "emergency_access_test", "timeout_validation"]
+      },
+      "transmission_security": {
+        "description": "Secure data transmission",
+        "requirements": [
+          "End-to-end encryption",
+          "Integrity controls",
+          "Authentication mechanisms",
+          "Audit controls"
+        ],
+        "validation_methods": ["transmission_test", "integrity_check", "authentication_audit"]
+      }
+    },
+    "phi_security": {
+      "data_classification": {
+        "description": "PHI identification and protection",
+        "requirements": [
+          "PHI data classification",
+          "Labeling procedures",
+          "Handling protocols",
+          "Disposal methods"
+        ],
+        "validation_methods": ["classification_audit", "labeling_check", "disposal_verification"]
+      }
+    }
+  }
+}
