@@ -1,17 +1,12 @@
-# AI Agents' Sandbox - Enterprise Edition
+<img width="312" height="180" alt="Image" src="https://github.com/user-attachments/assets/30a14518-72c6-48a0-aaa6-1a3fa02a0384" />
 
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
-[![GitHub](https://img.shields.io/badge/GitHub-View_Repository-black?logo=github)](https://github.com/lloydchang/ai-agents-sandbox)
-[![Production Ready](https://img.shields.io/badge/Production-Ready-brightgreen.svg)](https://github.com/lloydchang/ai-agents-sandbox)
-[![7/7 Integrations](https://img.shields.io/badge/Integrations-7%2F7-brightgreen.svg)](https://github.com/lloydchang/ai-agents-sandbox)
+---
 
-🚀 **Enterprise-Grade AI Agent Platform with Complete Repository Integration** 🚀
-
-A bleeding-edge laboratory for governed AI agent orchestration, enhanced with **7 production-ready integrations** from leading AI repositories.
+# ai agents sandbox
 
 ## What is AI Agents Sandbox?
 
-`ai-agents-sandbox` is a comprehensive, enterprise-ready platform that serves as both a **playground for multiple AI agents** and a **secure walled garden** for experimentation. It provides:
+`ai-agents-sandbox` is a place that serves as both a **playground for multiple AI agents** and a **local garden** for experimentation. It provides:
 
 - **30 Specialized Skills** - Infrastructure provisioning, compliance scanning, cost optimization, and more
 - **Multi-Agent Orchestration** - Coordinate complex workflows
@@ -21,7 +16,7 @@ A bleeding-edge laboratory for governed AI agent orchestration, enhanced with **
 
 ## 🎯 Repository Integration
 
-Successfully integrated **7 high-value repositories** to create a complete AI agent ecosystem:
+Successfully integrated an AI agent ecosystem:
 
 ### Phase 1 (High Priority) - 3/3 Complete ✅
 1. **MCP Tool Support** (temporal-ai-agent) - Goal-based agents, multi-agent workflows
@@ -139,8 +134,8 @@ Comprehensive documentation is organized in the [`docs/`](./docs/) directory:
          │                       │                       │
          ▼                       ▼                       ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Interfaces    │    │   Skills        │    │   Data Layer    │
-│   (REST/MCP/CLI)│    │   (28 skills)   │    │   (PostgreSQL)  │
+│   Interfaces    │    │ AI Agent Skills │    │   Data Layer    │
+│   (REST/MCP/CLI)│    │   (SKILL.MD)    │    │   (PostgreSQL)  │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -591,6 +586,16 @@ The name was chosen deliberately, and every word carries meaning.
 
 ---
 
+## Open-source software
+
+https://github.com/lloydchang/ai-agents-sandbox
+
+---
+
 ## License
 
-[GNU Affero General Public License v3.0 or later](LICENSE)
+[GNU Affero General Public License v3.0 or later](https://github.com/lloydchang/ai-agents-sandbox/blob/main/LICENSE)
+
+---
+
+<img width="1024" height="1024" alt="Image" src="https://github.com/user-attachments/assets/da6c7806-a569-4e98-9c82-8e2428abd80a" />
