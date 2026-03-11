@@ -1,5 +1,5 @@
 app:
-  title: Backstage + Temporal Sandbox
+  title: ai agents sandbox 
 
 backend:
   baseUrl: http://localhost:8081

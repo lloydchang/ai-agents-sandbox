@@ -38,7 +38,7 @@ export const SplitScreenLandingPage: React.FC = () => {
   return (
     <Box sx={{ flexGrow: 1, p: 3 }}>
       <Typography variant="h3" gutterBottom align="center">
-        ai agents sandbox - a playground for multiple ai agents in a local garden
+        ai agents sandbox
       </Typography>
 
       <Grid container spacing={4} sx={{ mt: 2 }}>

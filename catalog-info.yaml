@@ -2,7 +2,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: backstage-temporal
-  description: Backstage + Temporal integration sandbox
+  description: ai agents sandbox
   annotations:
     github.com/project-slug: backstage-temporal/backstage-temporal
     backstage.io/techdocs-ref: dir:.

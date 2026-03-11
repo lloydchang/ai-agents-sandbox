@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Paper, 
+  Box, 
   List, 
   ListItem, 
   Tooltip, 
@@ -32,36 +32,28 @@ export const Navigation: React.FC = () => {
   const theme = useTheme();
 
   return (
-    <Paper
-      elevation={4}
+    <Box
       sx={{
         position: 'fixed',
-        left: 16,
-        top: '50%',
-        transform: 'translateY(-50%)',
+        top: 16,
+        right: 16,
         zIndex: 1300,
         borderRadius: 4,
-        padding: 1,
-        background: 'rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         gap: 2,
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
-          boxShadow: '0 12px 48px 0 rgba(31, 38, 135, 0.25)',
-          transform: 'translateY(-50%) scale(1.02)',
+          transform: 'scale(1.02)',
         }
       }}
     >
-      <List sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      <List sx={{ display: 'flex', flexDirection: 'row', gap: 1 }}>
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <ListItem key={item.path} disablePadding sx={{ display: 'block' }}>
-              <Tooltip title={item.label} placement="right" arrow>
+              <Tooltip title={item.label} placement="bottom" arrow>
                 <IconButton
                   onClick={() => navigate(item.path)}
                   sx={{
@@ -87,6 +79,6 @@ export const Navigation: React.FC = () => {
           );
         })}
       </List>
-    </Paper>
+    </Box>
   );
 };
