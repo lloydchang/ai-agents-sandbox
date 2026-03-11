@@ -142,8 +142,6 @@ func ConversationalAgentWorkflow(ctx workflow.Context, request ConversationReque
 		state.Context["goal_priority"] = goal.Priority
 	}
 
-	}
-
 	// Activity options for LLM and tool interactions
 	activityOptions := workflow.ActivityOptions{
 		StartToCloseTimeout: time.Minute * 10,
@@ -293,7 +291,7 @@ func executeConversationTurn(ctx workflow.Context, state *ConversationState, req
 			}
 
 			// Execute MCP tool
-			err := mcpRegistry.ExecuteTool(ctx, mcpToolCall)
+			err := workflow.ExecuteActivity(ctx, activities.ExecuteMCPToolActivity, mcpToolCall).Get(ctx, nil)
 			if err != nil {
 				logger.Warn("MCP tool execution failed", "tool", activityToolCall.ToolName, "error", err)
 				mcpToolCall.Error = err.Error()
@@ -485,6 +483,8 @@ func containsAnyTerm(input string, terms []string) bool {
 	}
 	return false
 }
+
+func convertActivityToolCalls(activityToolCalls []activities.ActivityToolCall) []ToolCall {
 	toolCalls := make([]ToolCall, len(activityToolCalls))
 	for i, atc := range activityToolCalls {
 		toolCalls[i] = ToolCall{

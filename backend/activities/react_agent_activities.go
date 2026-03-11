@@ -16,7 +16,7 @@ func GenerateReActThoughtActivity(ctx context.Context, contextData map[string]in
 	logger.Info("Generating ReAct thought", "provider", llmProvider, "model", llmModel)
 
 	// Build prompt for thought generation
-	prompt := buildReActThoughtPrompt(contextData)
+	_ = buildReActThoughtPrompt(contextData)
 	
 	// Mock LLM implementation - in real implementation, this would call actual LLM
 	time.Sleep(time.Millisecond * 300)
@@ -34,7 +34,7 @@ func GenerateReActActionActivity(ctx context.Context, thought string, query stri
 	logger.Info("Generating ReAct action", "tools", len(tools))
 
 	// Build prompt for action generation
-	prompt := buildReActActionPrompt(thought, query, tools)
+	_ = buildReActActionPrompt(thought, query, tools)
 	
 	// Mock LLM implementation
 	time.Sleep(time.Millisecond * 200)
@@ -52,7 +52,7 @@ func GenerateReActObservationActivity(ctx context.Context, toolResults []map[str
 	logger.Info("Generating ReAct observation", "results", len(toolResults))
 
 	// Build prompt for observation generation
-	prompt := buildReActObservationPrompt(toolResults)
+	_ = buildReActObservationPrompt(toolResults)
 	
 	// Mock LLM implementation
 	time.Sleep(time.Millisecond * 200)
@@ -164,7 +164,7 @@ func generateMockReActThought(contextData map[string]interface{}) string {
 // generateMockReActAction generates a mock action for ReAct
 func generateMockReActAction(thought string, query string, tools []mcp.MCPTool) string {
 	thoughtLower := strings.ToLower(thought)
-	queryLower := strings.ToLower(query)
+
 
 	// Determine action based on thought and available tools
 	if strings.Contains(thoughtLower, "search") && hasTool(tools, "web_search") {
@@ -236,7 +236,7 @@ func hasTool(tools []mcp.MCPTool, toolName string) bool {
 // AnalyzeReActPerformanceActivity analyzes the performance of a ReAct agent execution
 func AnalyzeReActPerformanceActivity(ctx context.Context, steps []interface{}, toolsUsed []string, totalTime time.Duration) (map[string]interface{}, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("Analyzing ReAct performance", "steps", len(steps), "tools", len(tools))
+	logger.Info("Analyzing ReAct performance", "steps", len(steps), "tools", len(toolsUsed))
 
 	analysis := make(map[string]interface{})
 	
@@ -277,8 +277,14 @@ func AnalyzeReActPerformanceActivity(ctx context.Context, steps []interface{}, t
 	return analysis, nil
 }
 
+// ReActStepValidationResult represents the validation outcome
+type ReActStepValidationResult struct {
+	IsValid bool     `json:"isValid"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
 // ValidateReActStepActivity validates a ReAct step
-func ValidateReActStepActivity(ctx context.Context, stepType string, content string, stepNumber int) (bool, []string, error) {
+func ValidateReActStepActivity(ctx context.Context, stepType string, content string, stepNumber int) (*ReActStepValidationResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Validating ReAct step", "type", stepType, "step", stepNumber)
 
@@ -315,5 +321,8 @@ func ValidateReActStepActivity(ctx context.Context, stepType string, content str
 	}
 
 	logger.Info("ReAct step validation completed", "valid", isValid, "errors", len(errors))
-	return isValid, errors, nil
+	return &ReActStepValidationResult{
+		IsValid: isValid,
+		Errors:  errors,
+	}, nil
 }

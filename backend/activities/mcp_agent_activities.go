@@ -2,14 +2,12 @@ package activities
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
-	"go.temporal.io/sdk/activity"
 	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
-	"github.com/lloydchang/ai-agents-sandbox/backend/types"
+	"go.temporal.io/sdk/activity"
 )
 
 // GenerateAgentMessageActivity generates an agent message using LLM
@@ -18,7 +16,7 @@ func GenerateAgentMessageActivity(ctx context.Context, goal string, contextData 
 	logger.Info("Generating agent message", "goal", goal, "provider", llmProvider, "model", llmModel)
 
 	// Mock LLM implementation - in real implementation, this would call actual LLM
-	prompt := buildAgentPrompt(goal, contextData, tools)
+	_ = buildAgentPrompt(goal, contextData, tools)
 	
 	// Simulate LLM call
 	time.Sleep(time.Millisecond * 500)
@@ -55,7 +53,7 @@ func GenerateAgentResponseActivity(ctx context.Context, message string, toolCall
 	logger.Info("Generating agent response", "toolCalls", len(toolCalls), "provider", llmProvider)
 
 	// Mock LLM implementation - in real implementation, this would call actual LLM
-	prompt := buildResponsePrompt(message, toolCalls, contextData)
+	_ = buildResponsePrompt(message, toolCalls, contextData)
 	
 	// Simulate LLM call
 	time.Sleep(time.Millisecond * 300)
@@ -299,8 +297,14 @@ func getToolCategory(toolName string) string {
 	}
 }
 
+// ToolValidationResult represents the result of parameter validation
+type ToolValidationResult struct {
+	IsValid bool     `json:"isValid"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
 // ValidateToolParametersActivity validates tool parameters
-func ValidateToolParametersActivity(ctx context.Context, toolName string, parameters map[string]interface{}) (bool, []string, error) {
+func ValidateToolParametersActivity(ctx context.Context, toolName string, parameters map[string]interface{}) (*ToolValidationResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Validating tool parameters", "tool", toolName)
 
@@ -346,5 +350,8 @@ func ValidateToolParametersActivity(ctx context.Context, toolName string, parame
 	isValid := len(errors) == 0
 	logger.Info("Parameter validation completed", "valid", isValid, "errors", len(errors))
 	
-	return isValid, errors, nil
+	return &ToolValidationResult{
+		IsValid: isValid,
+		Errors:  errors,
+	}, nil
 }

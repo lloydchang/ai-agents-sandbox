@@ -13,52 +13,52 @@ import (
 
 // Skill represents a parsed skill with its metadata and content
 type Skill struct {
-	Name                     string            `yaml:"name"`
-	Description              string            `yaml:"description"`
-	ArgumentHint             string            `yaml:"argument-hint,omitempty"`
-	DisableModelInvocation   bool              `yaml:"disable-model-invocation,omitempty"`
-	UserInvocable            bool              `yaml:"user-invocable,omitempty"`
-	AllowedTools             []string          `yaml:"allowed-tools,omitempty"`
-	Model                    string            `yaml:"model,omitempty"`
-	Context                  string            `yaml:"context,omitempty"`
-	Agent                    string            `yaml:"agent,omitempty"`
-	Hooks                    map[string]interface{} `yaml:"hooks,omitempty"`
+	Name                     string            `yaml:"name" json:"name"`
+	Description              string            `yaml:"description" json:"description"`
+	ArgumentHint             string            `yaml:"argument-hint,omitempty" json:"argumentHint,omitempty"`
+	DisableModelInvocation   bool              `yaml:"disable-model-invocation,omitempty" json:"disableModelInvocation,omitempty"`
+	UserInvocable            bool              `yaml:"user-invocable,omitempty" json:"userInvocable,omitempty"`
+	AllowedTools             []string          `yaml:"allowed-tools,omitempty" json:"allowedTools,omitempty"`
+	Model                    string            `yaml:"model,omitempty" json:"model,omitempty"`
+	Context                  string            `yaml:"context,omitempty" json:"context,omitempty"`
+	Agent                    string            `yaml:"agent,omitempty" json:"agent,omitempty"`
+	Hooks                    map[string]interface{} `yaml:"hooks,omitempty" json:"hooks,omitempty"`
 
 	// Parsed content
-	Content         string
-	Path            string
-	Directory       string
-	SupportingFiles map[string]string
+	Content         string `json:"content"`
+	Path            string `json:"path"`
+	Directory       string `json:"directory"`
+	SupportingFiles map[string]string `json:"supportingFiles"`
 
 	// Metadata
-	Scope           string // "repo", "user", "admin", "system"
-	Priority        int    // For conflict resolution
+	Scope           string `json:"scope"`    // "repo", "user", "admin", "system"
+	Priority        int    `json:"priority"` // For conflict resolution
 }
 
 // SkillMetadata represents the optional agents/openai.yaml metadata
 type SkillMetadata struct {
 	Interface struct {
-		DisplayName      string `yaml:"display_name,omitempty"`
-		ShortDescription string `yaml:"short_description,omitempty"`
-		IconSmall        string `yaml:"icon_small,omitempty"`
-		IconLarge        string `yaml:"icon_large,omitempty"`
-		BrandColor       string `yaml:"brand_color,omitempty"`
-		DefaultPrompt    string `yaml:"default_prompt,omitempty"`
-	} `yaml:"interface,omitempty"`
+		DisplayName      string `yaml:"display_name,omitempty" json:"displayName,omitempty"`
+		ShortDescription string `yaml:"short_description,omitempty" json:"shortDescription,omitempty"`
+		IconSmall        string `yaml:"icon_small,omitempty" json:"iconSmall,omitempty"`
+		IconLarge        string `yaml:"icon_large,omitempty" json:"iconLarge,omitempty"`
+		BrandColor       string `yaml:"brand_color,omitempty" json:"brandColor,omitempty"`
+		DefaultPrompt    string `yaml:"default_prompt,omitempty" json:"defaultPrompt,omitempty"`
+	} `yaml:"interface,omitempty" json:"interface,omitempty"`
 
 	Policy struct {
-		AllowImplicitInvocation bool `yaml:"allow_implicit_invocation"`
-	} `yaml:"policy,omitempty"`
+		AllowImplicitInvocation bool `yaml:"allow_implicit_invocation" json:"allowImplicitInvocation"`
+	} `yaml:"policy,omitempty" json:"policy,omitempty"`
 
 	Dependencies struct {
 		Tools []struct {
-			Type        string `yaml:"type"`
-			Value       string `yaml:"value"`
-			Description string `yaml:"description,omitempty"`
-			Transport   string `yaml:"transport,omitempty"`
-			URL         string `yaml:"url,omitempty"`
-		} `yaml:"tools,omitempty"`
-	} `yaml:"dependencies,omitempty"`
+			Type        string `yaml:"type" json:"type"`
+			Value       string `yaml:"value" json:"value"`
+			Description string `yaml:"description,omitempty" json:"description,omitempty"`
+			Transport   string `yaml:"transport,omitempty" json:"transport,omitempty"`
+			URL         string `yaml:"url,omitempty" json:"url,omitempty"`
+		} `yaml:"tools,omitempty" json:"tools,omitempty"`
+	} `yaml:"dependencies,omitempty" json:"dependencies,omitempty"`
 }
 
 // SkillManager manages skill discovery and execution

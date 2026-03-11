@@ -293,11 +293,7 @@ func (m *MultiModelManager) processWithAllModels(ctx context.Context, request Mu
 func (m *MultiModelManager) processWithModel(ctx context.Context, request MultiModelRequest, model *ModelConfig) (*ModelResult, error) {
 	start := time.Now()
 
-	result := &ModelResult{
-		ModelID:   model.ID,
-		ModelName: model.Name,
-		Provider: model.Provider,
-	}
+
 
 	// Process based on provider
 	switch model.Provider {

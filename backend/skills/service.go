@@ -67,6 +67,18 @@ func (sm *SkillManager) discoverProjectSkills(startDir string) {
 			sm.AddSkillDir(skillDir, "repo", priority)
 		}
 
+		// Also check for .agents/skills (common pattern)
+		agentsSkillDir := filepath.Join(currentDir, ".agents", "skills")
+		if _, err := os.Stat(agentsSkillDir); err == nil {
+			sm.AddSkillDir(agentsSkillDir, "agents-repo", 15)
+		}
+
+		// Also check for discovered_skills (manual sync)
+		discoveredSkillDir := filepath.Join(currentDir, "discovered_skills")
+		if _, err := os.Stat(discoveredSkillDir); err == nil {
+			sm.AddSkillDir(discoveredSkillDir, "discovered", 25)
+		}
+
 		// Check for .claude/skills in current directory (additional support)
 		claudeSkillDir := filepath.Join(currentDir, ".claude", "skills")
 		if _, err := os.Stat(claudeSkillDir); err == nil {
@@ -102,19 +114,19 @@ func (sm *SkillManager) discoverProjectSkills(startDir string) {
 // RegisterRoutes registers skill management routes
 func (ss *SkillService) RegisterRoutes(router *mux.Router) {
 	// List all skills
-	router.HandleFunc("/api/skills", ss.ListSkillsHandler).Methods("GET")
+	router.HandleFunc("/api/skills", ss.ListSkillsHandler).Methods("GET", "OPTIONS")
 
 	// Get specific skill
-	router.HandleFunc("/api/skills/{name}", ss.GetSkillHandler).Methods("GET")
+	router.HandleFunc("/api/skills/{name}", ss.GetSkillHandler).Methods("GET", "OPTIONS")
 
 	// Execute skill
-	router.HandleFunc("/api/skills/{name}/execute", ss.ExecuteSkillHandler).Methods("POST")
+	router.HandleFunc("/api/skills/{name}/execute", ss.ExecuteSkillHandler).Methods("POST", "OPTIONS")
 
 	// List user-invocable skills (for UI dropdowns)
-	router.HandleFunc("/api/skills/invocable", ss.ListInvocableSkillsHandler).Methods("GET")
+	router.HandleFunc("/api/skills/invocable", ss.ListInvocableSkillsHandler).Methods("GET", "OPTIONS")
 
 	// Skill discovery endpoint
-	router.HandleFunc("/api/skills/discover", ss.DiscoverSkillsHandler).Methods("POST")
+	router.HandleFunc("/api/skills/discover", ss.DiscoverSkillsHandler).Methods("POST", "OPTIONS")
 }
 
 // ListSkillsHandler returns all available skills

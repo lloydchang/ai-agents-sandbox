@@ -35,13 +35,7 @@ type MCPConfig struct {
 	LogLevel          string   `json:"logLevel"`
 }
 
-// MCPTool represents a tool that can be called by MCP clients
-type MCPTool struct {
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	InputSchema map[string]interface{} `json:"inputSchema"`
-	Handler     MCPToolHandler         `json:"-"`
-}
+
 
 // MCPResource represents a resource that can be accessed by MCP clients
 type MCPResource struct {

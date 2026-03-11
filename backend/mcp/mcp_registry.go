@@ -2,7 +2,6 @@ package mcp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -32,6 +31,7 @@ type MCPTool struct {
 	Category    string                 `json:"category,omitempty"`    // finance, hr, travel, ecommerce
 	Priority    int                    `json:"priority,omitempty"`    // 1=high, 2=medium, 3=low
 	GoalAligned []string              `json:"goalAligned,omitempty"`  // Goals this tool supports
+	Handler     MCPToolHandler         `json:"-"` // Handler for the tool
 }
 
 // MCPToolCall represents a call to an MCP tool

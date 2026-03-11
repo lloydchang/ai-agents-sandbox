@@ -1,9 +1,7 @@
 package structured
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"

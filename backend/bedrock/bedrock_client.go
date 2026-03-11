@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockruntime"
 )
@@ -193,7 +192,7 @@ func (bc *BedrockClient) InvokeConversation(ctx context.Context, request Convers
 		return response, err
 	}
 
-	response.Messages = append(response.Messages, result.Message)
+	response.Messages = append(response.Messages, result.Messages...)
 	response.Usage = result.Usage
 	response.FinishReason = result.FinishReason
 	response.ProcessingTime = time.Since(start).Milliseconds()
@@ -238,9 +237,11 @@ func (bc *BedrockClient) mockInvokeConversation(ctx context.Context, request Con
 	completion := bc.generateMockCompletion(request.ModelID, conversationContext)
 
 	return &ConversationResponse{
-		Message: ConversationMessage{
-			Role:    "assistant",
-			Content: completion,
+		Messages: []ConversationMessage{
+			{
+				Role:    "assistant",
+				Content: completion,
+			},
 		},
 		Usage: map[string]interface{}{
 			"prompt_tokens":     len(conversationContext) / 4,

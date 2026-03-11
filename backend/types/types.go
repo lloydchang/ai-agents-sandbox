@@ -58,6 +58,12 @@ type HumanReviewResult struct {
 	EscalationLevel int                    `json:"escalationLevel"`
 }
 
+// ValidationResult represents the output of a validation activity
+type ValidationResult struct {
+	IsValid bool     `json:"isValid"`
+	Errors  []string `json:"errors,omitempty"`
+}
+
 type ComplianceReport struct {
 	ID                      string                `json:"id"`
 	TargetResource          string                `json:"targetResource"`
@@ -387,5 +393,33 @@ type Notification struct {
 	Status      string                 `json:"status"`
 	Channels    []string               `json:"channels"`
 	Metadata    map[string]interface{} `json:"metadata"`
-	ReadAt      *time.Time             `json:"readAt,omitempty"`
+}
+
+// SkillExecutionRequest defines the input for the SkillExecutionWorkflow
+type SkillExecutionRequest struct {
+	SkillName string   `json:"skillName"`
+	Arguments []string `json:"arguments"`
+}
+
+// SkillStep represents a single step parsed from a skill definition
+type SkillStep struct {
+	Number      int      `json:"number"`
+	Description string   `json:"description"`
+	Commands    []string `json:"commands"`
+	IsHumanGate bool     `json:"isHumanGate"`
+}
+
+// SkillExecutionStatus represents the current state of a skill execution
+type SkillExecutionStatus struct {
+	SkillName    string        `json:"skillName"`
+	CurrentStep  int           `json:"currentStep"`
+	TotalSteps   int           `json:"totalSteps"`
+	Status       string        `json:"status"` // "Running", "Paused", "Completed", "Failed"
+	StepResults  []StepResult  `json:"stepResults"`
+}
+
+type StepResult struct {
+	StepNumber int    `json:"stepNumber"`
+	Output     string `json:"output"`
+	Success    bool   `json:"success"`
 }

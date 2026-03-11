@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"go.temporal.io/sdk/activity"
@@ -14,6 +15,8 @@ import (
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/worker"
 	"go.temporal.io/sdk/workflow"
+	"net/http/httputil"
+	"net/url"
 	
 	// Import our custom packages
 	"github.com/lloydchang/ai-agents-sandbox/backend/activities"
@@ -21,6 +24,7 @@ import (
 	"github.com/lloydchang/ai-agents-sandbox/backend/config"
 	"github.com/lloydchang/ai-agents-sandbox/backend/emulators"
 	"github.com/lloydchang/ai-agents-sandbox/backend/humanloop"
+	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
 	"github.com/lloydchang/ai-agents-sandbox/backend/monitoring"
 	"github.com/lloydchang/ai-agents-sandbox/backend/multimodel"
 	"github.com/lloydchang/ai-agents-sandbox/backend/performance"
@@ -37,7 +41,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, Origin, Access-Control-Allow-Origin")
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
@@ -169,9 +173,9 @@ func AggregateResultsActivity(ctx context.Context, results []string) (string, er
 	return "Issues Found", nil
 }
 
-func HumanReviewActivity(ctx context.Context, aggregatedResult string) (string, error) {
+func SimpleHumanReviewActivity(ctx context.Context, aggregatedResult string) (string, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("HumanReviewActivity", "aggregatedResult", aggregatedResult)
+	logger.Info("SimpleHumanReviewActivity", "aggregatedResult", aggregatedResult)
 	// Mock human review - in real implementation, pause workflow and wait for signal
 	if aggregatedResult == "All Compliant" {
 		return "Approved", nil
@@ -196,7 +200,7 @@ func main() {
 	log.Printf("Infrastructure emulator initialized")
 
 	// Initialize skills service
-	skillService := skills.NewSkillService(".", "session-"+time.Now().Format("20060102150405"))
+	skillService := skills.NewSkillService("/Users/lloyd/github/antigravity/ai-agents-sandbox", "session-"+time.Now().Format("20060102150405"))
 	log.Printf("Skills service initialized with %d skills", len(skillService.GetManager().ListSkills()))
 
 	// Initialize monitoring system
@@ -219,6 +223,35 @@ func main() {
 	// Start performance monitoring
 	go concurrencyMgr.ProcessQueue(ctx)
 
+	// Initialize WebSocket handler (needed before worker registration)
+	websocketHandler := websocket.NewWebSocketHandler()
+	go websocketHandler.GetHub().Run()
+
+	// Initialize Bedrock activities (needed before worker registration)
+	bedrockActivities, err := activities.NewBedrockActivities("us-west-2")
+	if err != nil {
+		log.Printf("Warning: Bedrock activities unavailable (expected in local dev): %v", err)
+		bedrockActivities = nil
+	}
+
+	// Initialize WebSocket activities (needed before worker registration)
+	websocketActivities := activities.NewWebSocketActivities(websocketHandler.GetHub())
+
+	// Initialize multi-model manager (needed before worker registration)
+	bedrockClient, err := bedrock.NewBedrockClient("us-west-2")
+	if err != nil {
+		log.Printf("Warning: Bedrock client unavailable (expected in local dev): %v", err)
+		bedrockClient = nil
+	}
+	multiModelManager := multimodel.NewMultiModelManager(bedrockClient)
+	multiModelActivities := activities.NewMultiModelActivities(multiModelManager)
+	
+	// Initialize skill execution activities
+	skillExecutionActivities := &activities.SkillExecutionActivities{
+		SkillManager: skillService.GetManager(),
+		Emulator:     emulator,
+	}
+
 	c, err := client.NewClient(client.Options{})
 	if err != nil {
 		log.Fatal("Unable to create client", err)
@@ -227,9 +260,16 @@ func main() {
 
 	w := worker.New(c, "ai-agent-task-queue", worker.Options{})
 
+	// Register the HelloBackstage workflow and its activities
+	w.RegisterWorkflow(HelloBackstageWorkflow)
+	w.RegisterWorkflow(ComplianceCheckWorkflow)
+	w.RegisterActivity(FetchDataActivity)
+	w.RegisterActivity(ProcessDataActivity)
+	w.RegisterActivity(AgentCheckActivity)
+	w.RegisterActivity(AggregateResultsActivity)
+	w.RegisterActivity(SimpleHumanReviewActivity)
+
 	// Register enhanced workflows
-	// w.RegisterWorkflow(workflows.AIOrchestrationWorkflowV2) // Function doesn't exist
-	// w.RegisterWorkflow(workflows.EnhancedWorkflowMetricsWorkflow) // Function doesn't exist
 	w.RegisterWorkflow(workflows.ConversationalAgentWorkflow)
 	w.RegisterWorkflow(workflows.GoalBasedAgentWorkflow)
 	w.RegisterWorkflow(workflows.ReActAgentWorkflow)
@@ -247,10 +287,13 @@ func main() {
 	w.RegisterActivity(activities.GenerateComplianceReportActivityV2)
 	w.RegisterActivity(activities.HumanReviewActivityV2)
 
+	// Register AIAgentOrchestrationWorkflowV2
+	w.RegisterWorkflow(workflows.AIAgentOrchestrationWorkflowV2)
+
 	// Register conversation activities
 	w.RegisterActivity(activities.ExecuteConversationTurnActivity)
 	w.RegisterActivity(activities.GenerateConversationSummaryActivity)
-	
+
 	// Register MCP agent activities
 	w.RegisterActivity(activities.GenerateAgentMessageActivity)
 	w.RegisterActivity(activities.ExecuteMCPToolActivity)
@@ -260,14 +303,14 @@ func main() {
 	w.RegisterActivity(activities.ListCategoriesActivity)
 	w.RegisterActivity(activities.AnalyzeToolUsageActivity)
 	w.RegisterActivity(activities.ValidateToolParametersActivity)
-	
+
 	// Register ReAct agent activities
 	w.RegisterActivity(activities.GenerateReActThoughtActivity)
 	w.RegisterActivity(activities.GenerateReActActionActivity)
 	w.RegisterActivity(activities.GenerateReActObservationActivity)
 	w.RegisterActivity(activities.AnalyzeReActPerformanceActivity)
 	w.RegisterActivity(activities.ValidateReActStepActivity)
-	
+
 	// Register research activities
 	w.RegisterActivity(activities.GenerateResearchPlanActivity)
 	w.RegisterActivity(activities.DiscoverWebSourcesActivity)
@@ -280,19 +323,21 @@ func main() {
 	w.RegisterActivity(activities.StreamResearchEventsActivity)
 	w.RegisterActivity(activities.ValidateResearchSourceActivity)
 	w.RegisterActivity(activities.CalculateResearchQualityActivity)
-	
-	// Register Bedrock activities (using the activities instance)
-	w.RegisterActivity(bedrockActivities.GenerateTextWithBedrockActivity)
-	w.RegisterActivity(bedrockActivities.ConductConversationWithBedrockActivity)
-	w.RegisterActivity(bedrockActivities.AnalyzeWithBedrockActivity)
-	w.RegisterActivity(bedrockActivities.SummarizeWithBedrockActivity)
-	w.RegisterActivity(bedrockActivities.TranslateWithBedrockActivity)
-	w.RegisterActivity(bedrockActivities.ClassifyWithBedrockActivity)
-	w.RegisterActivity(bedrockActivities.GetBedrockModelsActivity)
-	w.RegisterActivity(bedrockActivities.ValidateBedrockRequestActivity)
-	w.RegisterActivity(bedrockActivities.ValidateBedrockConversationActivity)
-	w.RegisterActivity(bedrockActivities.CompareModelsActivity)
-	
+
+	// Register Bedrock activities (if available)
+	if bedrockActivities != nil {
+		w.RegisterActivity(bedrockActivities.GenerateTextWithBedrockActivity)
+		w.RegisterActivity(bedrockActivities.ConductConversationWithBedrockActivity)
+		w.RegisterActivity(bedrockActivities.AnalyzeWithBedrockActivity)
+		w.RegisterActivity(bedrockActivities.SummarizeWithBedrockActivity)
+		w.RegisterActivity(bedrockActivities.TranslateWithBedrockActivity)
+		w.RegisterActivity(bedrockActivities.ClassifyWithBedrockActivity)
+		w.RegisterActivity(bedrockActivities.GetBedrockModelsActivity)
+		w.RegisterActivity(bedrockActivities.ValidateBedrockRequestActivity)
+		w.RegisterActivity(bedrockActivities.ValidateBedrockConversationActivity)
+		w.RegisterActivity(bedrockActivities.CompareBedrockModelsActivity)
+	}
+
 	// Register WebSocket activities
 	w.RegisterActivity(websocketActivities.BroadcastWorkflowUpdateActivity)
 	w.RegisterActivity(websocketActivities.BroadcastAgentUpdateActivity)
@@ -309,13 +354,13 @@ func main() {
 	w.RegisterActivity(websocketActivities.ValidateWebSocketConnectionActivity)
 	w.RegisterActivity(websocketActivities.CreateNotificationActivity)
 	w.RegisterActivity(websocketActivities.SendHeartbeatActivity)
-	
+
 	// Register multi-model activities
 	w.RegisterActivity(multiModelActivities.ProcessMultiModelRequestActivity)
 	w.RegisterActivity(multiModelActivities.GetAvailableModelsActivity)
 	w.RegisterActivity(multiModelActivities.GetModelsByProviderActivity)
 	w.RegisterActivity(multiModelActivities.GetModelsByCapabilityActivity)
-	w.RegisterActivity(multiModelActivities.CompareModelsActivity)
+	w.RegisterActivity(multiModelActivities.CompareMultiModelsActivity)
 	w.RegisterActivity(multiModelActivities.EnsembleModelsActivity)
 	w.RegisterActivity(multiModelActivities.SelectBestModelActivity)
 	w.RegisterActivity(multiModelActivities.ValidateMultiModelRequestActivity)
@@ -330,8 +375,6 @@ func main() {
 	w.RegisterActivity(monitoring.RecordWorkflowMetricsActivity)
 	w.RegisterActivity(monitoring.RecordAgentMetricsActivity)
 	w.RegisterActivity(monitoring.GetMetricsActivity)
-	// w.RegisterActivity(monitoring.HealthCheckActivity) // Function doesn't exist
-	// w.RegisterActivity(monitoring.PerformanceMetricsActivity) // Function doesn't exist
 
 	// Register human loop activities
 	w.RegisterActivity(humanloop.RouteTaskActivity)
@@ -356,6 +399,14 @@ func main() {
 	w.RegisterActivity(activities.AggregateAgentResultsActivity)
 	w.RegisterActivity(activities.GenerateComplianceReportActivity)
 	w.RegisterActivity(activities.HumanReviewActivity)
+	
+	// Register skill execution activities
+	w.RegisterActivity(skillExecutionActivities.GetSkillContentActivity)
+	w.RegisterActivity(skillExecutionActivities.ParseSkillStepsActivity)
+	w.RegisterActivity(skillExecutionActivities.ExecuteSkillStepActivity)
+	
+	// Register skill execution workflow
+	w.RegisterWorkflow(workflows.SkillExecutionWorkflow)
 
 	err = w.Start()
 	if err != nil {
@@ -370,33 +421,12 @@ func main() {
 
 	// Initialize RAG AI handler
 	ragAIHandler := ragai.NewRagAIHandler()
-	
+
 	// Initialize Bedrock handler
 	bedrockHandler, err := bedrock.NewBedrockHandler("us-west-2")
 	if err != nil {
-		log.Fatal("Unable to create Bedrock handler", err)
+		log.Printf("Warning: Bedrock handler unavailable (expected in local dev): %v", err)
 	}
-	
-	// Initialize WebSocket handler
-	websocketHandler := websocket.NewWebSocketHandler()
-	
-	// Start WebSocket hub in background
-	go websocketHandler.GetHub().Run()
-	
-	// Initialize Bedrock activities
-	bedrockActivities, err := activities.NewBedrockActivities("us-west-2")
-	if err != nil {
-		log.Fatal("Unable to create Bedrock activities", err)
-	}
-	
-	// Initialize WebSocket activities
-	websocketActivities := activities.NewWebSocketActivities(websocketHandler.GetHub())
-	
-	// Initialize multi-model manager
-	multiModelManager := multimodel.NewMultiModelManager(bedrockClient)
-	
-	// Initialize multi-model activities
-	multiModelActivities := activities.NewMultiModelActivities(multiModelManager)
 	
 	// Register skill service routes
 	skillService.RegisterRoutes(r)
@@ -404,22 +434,52 @@ func main() {
 	// Register RAG AI routes
 	ragAIHandler.RegisterRoutes(r.PathPrefix("/api/rag-ai").Subrouter())
 	
-	// Register Bedrock routes
-	bedrockHandler.RegisterRoutes(r.PathPrefix("/api/bedrock").Subrouter())
+	// Register Bedrock routes (if available)
+	if bedrockHandler != nil {
+		bedrockHandler.RegisterRoutes(r.PathPrefix("/api/bedrock").Subrouter())
+	}
 	
 	// Register WebSocket routes
 	r.HandleFunc("/ws", websocketHandler.HandleWebSocket)
 
-	// Add explicit OPTIONS handlers for CORS preflight
+	// --- HelloBackstage Workflow: the primary entry point from the frontend ---
 	r.HandleFunc("/workflow/start", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}).Methods("OPTIONS")
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        "hello-backstage-" + time.Now().Format("20060102150405"),
+			TaskQueue: "ai-agent-task-queue",
+		}, HelloBackstageWorkflow, "Backstage")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(we.GetID()))
+	}).Methods("POST", "OPTIONS")
 
-	r.HandleFunc("/workflow/status", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	}).Methods("OPTIONS")
+
 
 	// Enhanced workflow endpoints
+	r.HandleFunc("/workflow/start-ai-orchestration", func(w http.ResponseWriter, r *http.Request) {
+		request := types.ComplianceRequest{
+			TargetResource: "vm-web-server-001",
+			ComplianceType: "full-scan",
+			Parameters:     make(map[string]string),
+			RequesterID:    "backstage-user",
+			Priority:       "normal",
+		}
+
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        "ai-orchestration-" + time.Now().Format("20060102150405"),
+			TaskQueue: "ai-agent-task-queue",
+		}, workflows.AIAgentOrchestrationWorkflowV2, request)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(we.GetID()))
+	}).Methods("POST", "OPTIONS")
+
 	r.HandleFunc("/workflow/start-ai-orchestration-v2", func(w http.ResponseWriter, r *http.Request) {
 		request := types.ComplianceRequest{
 			TargetResource: "vm-web-server-001",
@@ -437,8 +497,30 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(we.GetID()))
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
+
+	r.HandleFunc("/workflow/start-human-in-loop", func(w http.ResponseWriter, r *http.Request) {
+		task := types.HumanTask{
+			ID:          "task-" + time.Now().Format("20060102150405"),
+			Title:       "Security Review",
+			Description: "Review security compliance",
+			Priority:    "normal",
+			Status:      types.HumanTaskStatus{State: "pending", UpdatedAt: time.Now()},
+		}
+
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        "human-loop-" + time.Now().Format("20060102150405"),
+			TaskQueue: "ai-agent-task-queue",
+		}, humanloop.EnhancedHumanInTheLoopWorkflow, task)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(we.GetID()))
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/workflow/start-enhanced-human-loop", func(w http.ResponseWriter, r *http.Request) {
 		task := types.HumanTask{
@@ -460,8 +542,35 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(we.GetID()))
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
+
+	r.HandleFunc("/workflow/start-compliance", func(w http.ResponseWriter, r *http.Request) {
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        "compliance-workflow-" + time.Now().Format("20060102150405"),
+			TaskQueue: "ai-agent-task-queue",
+		}, security.SecureWorkflow, map[string]interface{}{"scan": true})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(we.GetID()))
+	}).Methods("POST", "OPTIONS")
+
+	r.HandleFunc("/workflow/start-multi-agent", func(w http.ResponseWriter, r *http.Request) {
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:        "multi-agent-workflow-" + time.Now().Format("20060102150405"),
+			TaskQueue: "ai-agent-task-queue",
+		}, workflows.AIAgentOrchestrationWorkflowV2, types.ComplianceRequest{TargetResource: "multi-agent-target"})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(we.GetID()))
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/workflow/start-optimized", func(w http.ResponseWriter, r *http.Request) {
 		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
@@ -472,8 +581,9 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(we.GetID()))
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/workflow/start-secure", func(w http.ResponseWriter, r *http.Request) {
 		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
@@ -484,8 +594,33 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(we.GetID()))
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
+
+	r.HandleFunc("/workflow/start-skill", func(w http.ResponseWriter, r *http.Request) {
+		var req types.SkillExecutionRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
+
+		we, err := c.ExecuteWorkflow(context.Background(), client.StartWorkflowOptions{
+			ID:         fmt.Sprintf("skill-exec-%s-%d", req.SkillName, time.Now().Unix()),
+			TaskQueue:  "ai-agent-task-queue",
+		}, workflows.SkillExecutionWorkflow, req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		
+		response := map[string]interface{}{
+			"workflowId": we.GetID(),
+			"runId":       we.GetRunID(),
+			"status":      "started",
+		}
+		json.NewEncoder(w).Encode(response)
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/workflow/status", func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
@@ -498,8 +633,9 @@ func main() {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(resp.WorkflowExecutionInfo.Status.String()))
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/workflow/signal/{workflowId}", func(w http.ResponseWriter, r *http.Request) {
 		workflowId := mux.Vars(r)["workflowId"]
@@ -522,7 +658,7 @@ func main() {
 
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("Signal sent"))
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	// Enhanced monitoring endpoints
 	r.HandleFunc("/monitoring/metrics", func(w http.ResponseWriter, r *http.Request) {
@@ -530,13 +666,13 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(metrics)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/monitoring/alerts", func(w http.ResponseWriter, r *http.Request) {
 		_ = metricsCollector.GetAlerts()
 
 		w.Header().Set("Content-Type", "application/json")
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	// Enhanced audit endpoints
 	r.HandleFunc("/audit/events", func(w http.ResponseWriter, r *http.Request) {
@@ -544,7 +680,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(events)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	// Performance endpoints
 	r.HandleFunc("/performance/stats", func(w http.ResponseWriter, r *http.Request) {
@@ -557,7 +693,27 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(stats)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
+
+	r.HandleFunc("/workflow/skill-status/{workflowId}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		workflowID := vars["workflowId"]
+
+		response, err := c.QueryWorkflow(context.Background(), workflowID, "", "GetSkillExecutionStatus")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var status types.SkillExecutionStatus
+		if err := response.Get(&status); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(status)
+	}).Methods("GET", "OPTIONS")
 
 	// Infrastructure emulator endpoints
 	r.HandleFunc("/emulator/resources", func(w http.ResponseWriter, r *http.Request) {
@@ -570,7 +726,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resources)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/emulator/resources/{id}", func(w http.ResponseWriter, r *http.Request) {
 		resourceID := mux.Vars(r)["id"]
@@ -582,7 +738,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resource)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/emulator/resources/{id}/security", func(w http.ResponseWriter, r *http.Request) {
 		resourceID := mux.Vars(r)["id"]
@@ -594,7 +750,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(posture)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/emulator/resources/{id}/compliance", func(w http.ResponseWriter, r *http.Request) {
 		resourceID := mux.Vars(r)["id"]
@@ -607,7 +763,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(status)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	// Conversation management endpoints
 	r.HandleFunc("/conversation/start", func(w http.ResponseWriter, r *http.Request) {
@@ -655,7 +811,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/conversation/{conversationId}/message", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -687,7 +843,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/conversation/{conversationId}/status", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -729,7 +885,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	// Goal-based agent endpoints
 	r.HandleFunc("/agent/goal/start", func(w http.ResponseWriter, r *http.Request) {
@@ -777,7 +933,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/agent/goal/{workflowId}/message", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -809,7 +965,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/agent/goal/{workflowId}/status", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -849,7 +1005,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	// MCP management endpoints
 	r.HandleFunc("/mcp/tools", func(w http.ResponseWriter, r *http.Request) {
@@ -882,7 +1038,7 @@ func main() {
 			"tools": tools,
 			"count": len(tools),
 		})
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/mcp/goals", func(w http.ResponseWriter, r *http.Request) {
 		// This would call the DiscoverGoalsActivity
@@ -911,7 +1067,7 @@ func main() {
 			"goals": goals,
 			"count": len(goals),
 		})
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/mcp/categories", func(w http.ResponseWriter, r *http.Request) {
 		mcpRegistry := mcp.GetGlobalMCPRegistry()
@@ -936,7 +1092,7 @@ func main() {
 			"categories": categoryList,
 			"count":      len(categoryList),
 		})
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/mcp/clients", func(w http.ResponseWriter, r *http.Request) {
 		mcpRegistry := mcp.GetGlobalMCPRegistry()
@@ -947,7 +1103,7 @@ func main() {
 			"clients": clients,
 			"count":   len(clients),
 		})
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/mcp/execute", func(w http.ResponseWriter, r *http.Request) {
 		var toolCall mcp.MCPToolCall
@@ -965,7 +1121,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(toolCall)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	// ReAct agent endpoints
 	r.HandleFunc("/agent/react/start", func(w http.ResponseWriter, r *http.Request) {
@@ -1010,7 +1166,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/agent/react/{workflowId}/status", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -1051,11 +1207,11 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	// Research workflow endpoints
 	r.HandleFunc("/research/start", func(w http.ResponseWriter, r *http.Request) {
-		var request workflows.ResearchRequest
+		var request types.ResearchRequest
 		if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
@@ -1103,7 +1259,7 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
-	}).Methods("POST")
+	}).Methods("POST", "OPTIONS")
 
 	r.HandleFunc("/research/{workflowId}/status", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -1117,7 +1273,7 @@ func main() {
 			return
 		}
 
-		var state workflows.ResearchState
+		var state types.ResearchState
 		if err := response.Get(&state); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -1152,37 +1308,80 @@ func main() {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(result)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 
 	r.HandleFunc("/research/{workflowId}/quality", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		workflowID := vars["workflowID"]
-
-		// Query research state
-		response, err := c.QueryWorkflow(context.Background(), workflowID, "", "GetResearchStateQuery")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		// NOTE: Quality calculation is done via the workflow, not directly here.
+		// Return a placeholder quality assessment.
+		quality := map[string]interface{}{
+			"status":  "quality_assessment_pending",
+			"message": "Quality assessment is computed as part of the research workflow. Query the workflow status for results.",
 		}
-
-		var state workflows.ResearchState
-		if err := response.Get(&state); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// Calculate quality metrics
-		var quality map[string]interface{}
-		err = workflow.ExecuteActivity(ctx, activities.CalculateResearchQualityActivity, state).Get(ctx, &quality)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(quality)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
+
+	// Health check endpoint
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	}).Methods("GET", "OPTIONS")
+
+	// Temporal UI Proxy to bypass X-Frame-Options
+	target, _ := url.Parse("http://localhost:8080")
+	proxy := httputil.NewSingleHostReverseProxy(target)
+	proxy.ModifyResponse = func(resp *http.Response) error {
+		resp.Header.Del("X-Frame-Options")
+		resp.Header.Del("Content-Security-Policy")
+		return nil
+	}
+
+	r.PathPrefix("/api/temporal-proxy/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api/temporal-proxy")
+		if r.URL.Path == "" {
+			r.URL.Path = "/"
+		}
+		proxy.ServeHTTP(w, r)
+	}).Methods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+
+	// Mock Catalog API for Backstage
+	r.HandleFunc("/api/catalog/entities", func(w http.ResponseWriter, r *http.Request) {
+		// Return a basic catalog for now to satisfy the frontend
+		entities := []map[string]interface{}{
+			{
+				"apiVersion": "backstage.io/v1alpha1",
+				"kind":       "Component",
+				"metadata": map[string]interface{}{
+					"name":        "ai-agents-sandbox-backend",
+					"description": "Temporal AI Agents Backend",
+					"annotations": map[string]string{
+						"backstage.io/managed-by-location": "url:http://localhost:8081/catalog-info.yaml",
+					},
+				},
+				"spec": map[string]interface{}{
+					"type":   "service",
+					"lifecycle": "development",
+					"owner": "guests",
+				},
+			},
+			{
+				"apiVersion": "backstage.io/v1alpha1",
+				"kind":       "Component",
+				"metadata": map[string]interface{}{
+					"name":        "ai-agents-sandbox-frontend",
+					"description": "Temporal AI Agents Frontend",
+				},
+				"spec": map[string]interface{}{
+					"type":   "website",
+					"lifecycle": "development",
+					"owner": "guests",
+				},
+			},
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(entities)
+	}).Methods("GET", "OPTIONS")
 
 	log.Printf("Starting enhanced HTTP server on :8081")
-	log.Fatal(http.ListenAndServe(":8081", r))
+	log.Fatal(http.ListenAndServe(":8081", corsMiddleware(r)))
 }

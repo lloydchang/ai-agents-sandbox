@@ -1,12 +1,10 @@
 package orchestration
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -188,7 +186,7 @@ func (w *OrchestrationWorkflow) executeResearchSearches(ctx workflow.Context, pl
 }
 
 // synthesizeResearchReport creates a comprehensive research report
-func (w *OrchestrationWorkflow) synthesizeResearchReport(query string, plan, searchResults []map[string]interface{}) string {
+func (w *OrchestrationWorkflow) synthesizeResearchReport(query string, plan map[string]interface{}, searchResults []map[string]interface{}) string {
 	report := fmt.Sprintf("# Research Report: %s\n\n", query)
 	report += fmt.Sprintf("**Research Plan:** %s depth analysis\n", plan["depth"])
 	report += fmt.Sprintf("**Sources Analyzed:** %d\n", len(searchResults))

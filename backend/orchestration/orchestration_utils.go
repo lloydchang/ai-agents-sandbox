@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+
+	"go.temporal.io/sdk/workflow"
 )
 
 // simulateToolExecution simulates tool execution for demonstration

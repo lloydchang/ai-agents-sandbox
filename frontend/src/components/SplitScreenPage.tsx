@@ -3,7 +3,6 @@ import {
   Content,
   Header,
   Page,
-  ResponseErrorPanel,
 } from '@backstage/core-components';
 import {
   Button,
@@ -19,8 +18,6 @@ import {
 } from '@mui/material';
 import {
   ViewColumn,
-  ViewAgenda,
-  Close,
   OpenInNew,
 } from '@mui/icons-material';
 import { useApi } from '@backstage/core-plugin-api';
@@ -31,19 +28,19 @@ interface SplitScreenPageProps {
 }
 
 export const SplitScreenPage: React.FC<SplitScreenPageProps> = ({ 
-  temporalUrl = 'http://localhost:8233' 
+  temporalUrl = 'http://localhost:8080' 
 }) => {
   const [isSplitScreen, setIsSplitScreen] = useState(true);
   const [showTemporalOnly, setShowTemporalOnly] = useState(false);
   const [showBackstageOnly, setShowBackstageOnly] = useState(false);
   const [temporalFrameKey, setTemporalFrameKey] = useState(Date.now());
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const config = useApi(configApiRef);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const backendUrl = config.getOptionalString('temporal.backendUrl') || 'http://localhost:8081';
-  const actualTemporalUrl = config.getOptionalString('temporal.webUrl') || temporalUrl;
+  // Use the backend proxy to bypass X-Frame-Options: sameorigin
+  // Use absolute URL to the Go backend proxy to bypass dev server 404s
+  const actualTemporalUrl = 'http://localhost:8081/api/temporal-proxy/';
 
   useEffect(() => {
     // Reset iframe when toggling views to prevent caching issues

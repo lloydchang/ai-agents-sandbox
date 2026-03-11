@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"go.temporal.io/sdk/activity"
-	"github.com/lloydchang/ai-agents-sandbox/backend/workflows"
+	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // GenerateResearchPlanActivity generates a research plan
@@ -43,19 +43,19 @@ func GenerateResearchPlanActivity(ctx context.Context, query string, researchTyp
 		"estimatedFindings": 8,
 	}
 
-	logger.Info("Research plan generated", "phases", len(plan["phases"]))
+	logger.Info("Research plan generated", "phases", len(plan["phases"].([]string)))
 	return plan, nil
 }
 
 // DiscoverWebSourcesActivity discovers web sources
-func DiscoverWebSourcesActivity(ctx context.Context, query string, maxSources int) ([]workflows.ResearchSource, error) {
+func DiscoverWebSourcesActivity(ctx context.Context, query string, maxSources int) ([]types.ResearchSource, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Discovering web sources", "query", query, "maxSources", maxSources)
 
 	// Mock web source discovery
 	time.Sleep(time.Millisecond * 500) // Simulate API call
 
-	sources := []workflows.ResearchSource{
+	sources := []types.ResearchSource{
 		{
 			ID:          "web_1",
 			Title:       fmt.Sprintf("Research Article about %s", query),
@@ -110,14 +110,14 @@ func DiscoverWebSourcesActivity(ctx context.Context, query string, maxSources in
 }
 
 // DiscoverDatabaseSourcesActivity discovers database sources
-func DiscoverDatabaseSourcesActivity(ctx context.Context, query string, maxSources int) ([]workflows.ResearchSource, error) {
+func DiscoverDatabaseSourcesActivity(ctx context.Context, query string, maxSources int) ([]types.ResearchSource, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Discovering database sources", "query", query, "maxSources", maxSources)
 
 	// Mock database source discovery
 	time.Sleep(time.Millisecond * 300) // Simulate database query
 
-	sources := []workflows.ResearchSource{
+	sources := []types.ResearchSource{
 		{
 			ID:          "db_1",
 			Title:       fmt.Sprintf("Internal Database Entry: %s Analysis", query),
@@ -160,14 +160,14 @@ func DiscoverDatabaseSourcesActivity(ctx context.Context, query string, maxSourc
 }
 
 // BuildKnowledgeGraphActivity builds a knowledge graph
-func BuildKnowledgeGraphActivity(ctx context.Context, sources []workflows.ResearchSource, maxDepth int) ([]workflows.KnowledgeNode, error) {
+func BuildKnowledgeGraphActivity(ctx context.Context, sources []types.ResearchSource, maxDepth int) ([]types.KnowledgeNode, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Building knowledge graph", "sources", len(sources), "maxDepth", maxDepth)
 
 	// Mock knowledge graph construction
 	time.Sleep(time.Millisecond * 800) // Simulate graph processing
 
-	nodes := []workflows.KnowledgeNode{
+	nodes := []types.KnowledgeNode{
 		{
 			ID:    "node_1",
 			Label: "Main Topic",
@@ -176,7 +176,7 @@ func BuildKnowledgeGraphActivity(ctx context.Context, sources []workflows.Resear
 				"importance": 0.9,
 				"category":   "primary",
 			},
-			Relationships: []workflows.KnowledgeEdge{
+			Relationships: []types.KnowledgeEdge{
 				{
 					ID:     "edge_1",
 					Source: "node_1",
@@ -198,7 +198,7 @@ func BuildKnowledgeGraphActivity(ctx context.Context, sources []workflows.Resear
 				"importance": 0.7,
 				"category":   "secondary",
 			},
-			Relationships: []workflows.KnowledgeEdge{
+			Relationships: []types.KnowledgeEdge{
 				{
 					ID:     "edge_2",
 					Source: "node_2",
@@ -217,7 +217,7 @@ func BuildKnowledgeGraphActivity(ctx context.Context, sources []workflows.Resear
 				"importance": 0.6,
 				"category":   "supporting",
 			},
-			Relationships: []workflows.KnowledgeEdge{},
+			Relationships: []types.KnowledgeEdge{},
 			CreatedAt:    time.Now(),
 		},
 	}
@@ -227,14 +227,14 @@ func BuildKnowledgeGraphActivity(ctx context.Context, sources []workflows.Resear
 }
 
 // AnalyzeContentActivity analyzes content from sources
-func AnalyzeContentActivity(ctx context.Context, sources []workflows.ResearchSource, query string) ([]workflows.ResearchFinding, error) {
+func AnalyzeContentActivity(ctx context.Context, sources []types.ResearchSource, query string) ([]types.ResearchFinding, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Analyzing content", "sources", len(sources))
 
 	// Mock content analysis
 	time.Sleep(time.Millisecond * 600)
 
-	findings := []workflows.ResearchFinding{
+	findings := []types.ResearchFinding{
 		{
 			ID:          "finding_1",
 			Title:       "Key Trend Identified",
@@ -268,14 +268,14 @@ func AnalyzeContentActivity(ctx context.Context, sources []workflows.ResearchSou
 }
 
 // AnalyzePatternsActivity analyzes patterns in data
-func AnalyzePatternsActivity(ctx context.Context, sources []workflows.ResearchSource, knowledgeGraph []workflows.KnowledgeNode) ([]workflows.ResearchFinding, error) {
+func AnalyzePatternsActivity(ctx context.Context, sources []types.ResearchSource, knowledgeGraph []types.KnowledgeNode) ([]types.ResearchFinding, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Analyzing patterns", "sources", len(sources), "nodes", len(knowledgeGraph))
 
 	// Mock pattern analysis
 	time.Sleep(time.Millisecond * 700)
 
-	findings := []workflows.ResearchFinding{
+	findings := []types.ResearchFinding{
 		{
 			ID:          "pattern_1",
 			Title:       "Recurring Pattern Detected",
@@ -309,14 +309,14 @@ func AnalyzePatternsActivity(ctx context.Context, sources []workflows.ResearchSo
 }
 
 // AnalyzeSentimentActivity analyzes sentiment in sources
-func AnalyzeSentimentActivity(ctx context.Context, sources []workflows.ResearchSource) ([]workflows.ResearchFinding, error) {
+func AnalyzeSentimentActivity(ctx context.Context, sources []types.ResearchSource) ([]types.ResearchFinding, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Analyzing sentiment", "sources", len(sources))
 
 	// Mock sentiment analysis
 	time.Sleep(time.Millisecond * 400)
 
-	findings := []workflows.ResearchFinding{
+	findings := []types.ResearchFinding{
 		{
 			ID:          "sentiment_1",
 			Title:       "Overall Sentiment Analysis",
@@ -338,7 +338,7 @@ func AnalyzeSentimentActivity(ctx context.Context, sources []workflows.ResearchS
 }
 
 // GenerateSynthesisActivity generates final synthesis
-func GenerateSynthesisActivity(ctx context.Context, query string, sources []workflows.ResearchSource, findings []workflows.ResearchFinding, knowledgeGraph []workflows.KnowledgeNode, llmProvider string, llmModel string) (string, error) {
+func GenerateSynthesisActivity(ctx context.Context, query string, sources []types.ResearchSource, findings []types.ResearchFinding, knowledgeGraph []types.KnowledgeNode, llmProvider string, llmModel string) (string, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Generating synthesis", "query", query, "sources", len(sources), "findings", len(findings))
 
@@ -378,7 +378,7 @@ Overall confidence in these findings: 85%%
 }
 
 // StreamResearchEventsActivity streams research events
-func StreamResearchEventsActivity(ctx context.Context, events []workflows.ResearchEvent, query string) error {
+func StreamResearchEventsActivity(ctx context.Context, events []types.ResearchEvent, query string) error {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Streaming research events", "eventCount", len(events), "query", query)
 
@@ -395,7 +395,7 @@ func StreamResearchEventsActivity(ctx context.Context, events []workflows.Resear
 }
 
 // ValidateResearchSourceActivity validates a research source
-func ValidateResearchSourceActivity(ctx context.Context, source workflows.ResearchSource) (bool, []string, error) {
+func ValidateResearchSourceActivity(ctx context.Context, source types.ResearchSource) (*types.ValidationResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Validating research source", "sourceId", source.ID)
 
@@ -429,11 +429,14 @@ func ValidateResearchSourceActivity(ctx context.Context, source workflows.Resear
 	}
 
 	logger.Info("Source validation completed", "valid", isValid, "errors", len(errors))
-	return isValid, errors, nil
+	return &types.ValidationResult{
+		IsValid: isValid,
+		Errors:  errors,
+	}, nil
 }
 
 // CalculateResearchQualityActivity calculates research quality metrics
-func CalculateResearchQualityActivity(ctx context.Context, state workflows.ResearchState) (map[string]interface{}, error) {
+func CalculateResearchQualityActivity(ctx context.Context, state types.ResearchState) (map[string]interface{}, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Calculating research quality metrics")
 
@@ -452,7 +455,7 @@ func CalculateResearchQualityActivity(ctx context.Context, state workflows.Resea
 
 // Helper functions
 
-func countEdges(nodes []workflows.KnowledgeNode) int {
+func countEdges(nodes []types.KnowledgeNode) int {
 	count := 0
 	for _, node := range nodes {
 		count += len(node.Relationships)
@@ -460,7 +463,7 @@ func countEdges(nodes []workflows.KnowledgeNode) int {
 	return count
 }
 
-func calculateSourceQuality(sources []workflows.ResearchSource) float64 {
+func calculateSourceQuality(sources []types.ResearchSource) float64 {
 	if len(sources) == 0 {
 		return 0
 	}
@@ -479,7 +482,7 @@ func calculateSourceQuality(sources []workflows.ResearchSource) float64 {
 	return (avgRelevance + avgCredibility) / 2
 }
 
-func calculateFindingQuality(findings []workflows.ResearchFinding) float64 {
+func calculateFindingQuality(findings []types.ResearchFinding) float64 {
 	if len(findings) == 0 {
 		return 0
 	}
@@ -492,7 +495,7 @@ func calculateFindingQuality(findings []workflows.ResearchFinding) float64 {
 	return totalConfidence / float64(len(findings))
 }
 
-func calculateGraphQuality(nodes []workflows.KnowledgeNode) float64 {
+func calculateGraphQuality(nodes []types.KnowledgeNode) float64 {
 	if len(nodes) == 0 {
 		return 0
 	}
@@ -509,7 +512,7 @@ func calculateGraphQuality(nodes []workflows.KnowledgeNode) float64 {
 	return quality
 }
 
-func calculateOverallQuality(state workflows.ResearchState) float64 {
+func calculateOverallQuality(state types.ResearchState) float64 {
 	sourceQuality := calculateSourceQuality(state.Sources)
 	findingQuality := calculateFindingQuality(state.Findings)
 	graphQuality := calculateGraphQuality(state.KnowledgeGraph)
@@ -517,7 +520,7 @@ func calculateOverallQuality(state workflows.ResearchState) float64 {
 	return (sourceQuality + findingQuality + graphQuality) / 3
 }
 
-func calculateCollaborationScore(contributions []workflows.AgentContribution) float64 {
+func calculateCollaborationScore(contributions []types.AgentContribution) float64 {
 	if len(contributions) == 0 {
 		return 0
 	}
@@ -530,7 +533,7 @@ func calculateCollaborationScore(contributions []workflows.AgentContribution) fl
 	return totalConfidence / float64(len(contributions))
 }
 
-func calculateEventCompleteness(events []workflows.ResearchEvent) float64 {
+func calculateEventCompleteness(events []types.ResearchEvent) float64 {
 	expectedPhases := []string{"planning", "discovery", "knowledge_graph", "analysis", "synthesis", "streaming"}
 	completedPhases := make(map[string]bool)
 

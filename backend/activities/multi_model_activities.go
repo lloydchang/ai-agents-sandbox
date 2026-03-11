@@ -7,6 +7,7 @@ import (
 
 	"go.temporal.io/sdk/activity"
 	"github.com/lloydchang/ai-agents-sandbox/backend/multimodel"
+	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // MultiModelActivities provides activities for multi-model AI operations
@@ -67,8 +68,8 @@ func (mma *MultiModelActivities) GetModelsByCapabilityActivity(ctx context.Conte
 	return models, nil
 }
 
-// CompareModelsActivity compares multiple models on the same task
-func (mma *MultiModelActivities) CompareModelsActivity(ctx context.Context, prompt string, modelIDs []string, strategy multimodel.SelectionStrategy) (map[string]interface{}, error) {
+// CompareMultiModelsActivity compares multiple models on the same task
+func (mma *MultiModelActivities) CompareMultiModelsActivity(ctx context.Context, prompt string, modelIDs []string, strategy multimodel.SelectionStrategy) (map[string]interface{}, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Comparing models", "models", len(modelIDs), "strategy", strategy)
 
@@ -149,7 +150,7 @@ func (mma *MultiModelActivities) SelectBestModelActivity(ctx context.Context, ta
 }
 
 // ValidateMultiModelRequestActivity validates a multi-model request
-func (mma *MultiModelActivities) ValidateMultiModelRequestActivity(ctx context.Context, request multimodel.MultiModelRequest) (bool, []string, error) {
+func (mma *MultiModelActivities) ValidateMultiModelRequestActivity(ctx context.Context, request multimodel.MultiModelRequest) (*types.ValidationResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Validating multi-model request", "strategy", request.Strategy)
 
@@ -214,7 +215,10 @@ func (mma *MultiModelActivities) ValidateMultiModelRequestActivity(ctx context.C
 	}
 
 	logger.Info("Multi-model request validation completed", "valid", isValid, "errors", len(errors), "availableModels", len(selectedModels))
-	return isValid, errors, nil
+	return &types.ValidationResult{
+		IsValid: isValid,
+		Errors:  errors,
+	}, nil
 }
 
 // GetModelStatisticsActivity returns statistics about available models
@@ -383,11 +387,6 @@ func (mma *MultiModelActivities) GetModelRecommendationsActivity(ctx context.Con
 	logger := activity.GetLogger(ctx)
 	logger.Info("Getting model recommendations", "taskType", taskType, "capabilities", len(capabilities), "max", maxRecommendations)
 
-	request := multimodel.MultiModelRequest{
-		TaskType:     taskType,
-		Capabilities: capabilities,
-		Strategy:     multimodel.StrategyBest,
-	}
 
 	selectedModels := mma.manager.GetAvailableModels()
 	var recommendedModels []*multimodel.ModelConfig

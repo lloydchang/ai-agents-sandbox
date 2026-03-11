@@ -2,9 +2,8 @@ package structured
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
+	"strings"
 	"time"
 
 	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
@@ -55,7 +54,7 @@ func (a *StructuredAgentActivities) ProcessStructuredAgentMessage(ctx context.Co
 	startTime := time.Now()
 
 	// Create structured prompt
-	prompt := a.structuredHandler.CreateStructuredPrompt(
+	_ = a.structuredHandler.CreateStructuredPrompt(
 		fmt.Sprintf("Process this user message: %s", req.Message),
 		req.ExpectedTypes,
 	)
@@ -132,7 +131,6 @@ func (a *StructuredAgentActivities) ExecuteStructuredToolCall(ctx context.Contex
 	mcpToolCall := mcp.MCPToolCall{
 		ToolName:   toolCall.ToolName,
 		Parameters: toolCall.Parameters,
-		ToolID:     toolCall.ToolID,
 	}
 
 	// Execute the tool using MCP registry

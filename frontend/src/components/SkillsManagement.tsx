@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -18,8 +18,20 @@ import {
   Grid,
   Alert,
   CircularProgress,
+  LinearProgress,
+  Divider,
+  Paper,
 } from '@mui/material';
-import { PlayArrow, Info, Refresh } from '@mui/icons-material';
+import { 
+  PlayArrow, 
+  Info, 
+  Refresh, 
+  CheckCircle, 
+  Error as ErrorIcon, 
+  PlayCircleFilled,
+  Description
+} from '@mui/icons-material';
+import { MarkdownContent } from '@backstage/core-components';
 
 interface Skill {
   name: string;
@@ -32,13 +44,18 @@ interface Skill {
   model?: string;
 }
 
-interface SkillExecution {
+interface StepResult {
+  stepNumber: number;
+  output: string;
+  success: boolean;
+}
+
+interface SkillExecutionStatus {
   skillName: string;
-  executionId: string;
-  forkRequired: boolean;
-  agentType: string;
-  content: string;
-  arguments: string[];
+  currentStep: number;
+  totalSteps: number;
+  status: string; // "Running", "Paused", "Completed", "Failed"
+  stepResults: StepResult[];
 }
 
 const SkillsManagement: React.FC = () => {
@@ -49,7 +66,10 @@ const SkillsManagement: React.FC = () => {
   const [executionDialog, setExecutionDialog] = useState(false);
   const [executionArgs, setExecutionArgs] = useState('');
   const [executing, setExecuting] = useState(false);
-  const [lastExecution, setLastExecution] = useState<SkillExecution | null>(null);
+  const [workflowId, setWorkflowId] = useState<string | null>(null);
+  const [executionStatus, setExecutionStatus] = useState<SkillExecutionStatus | null>(null);
+  const [viewMarkdownSkill, setViewMarkdownSkill] = useState<Skill | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const API_BASE = 'http://localhost:8081';
 
@@ -70,44 +90,56 @@ const SkillsManagement: React.FC = () => {
     }
   };
 
-  const executeSkill = async (skillName: string, args: string[]) => {
+  const startSkillWorkflow = async (skillName: string, args: string[]) => {
     setExecuting(true);
     setError(null);
+    setExecutionStatus(null);
     try {
-      const response = await fetch(`${API_BASE}/api/skills/${skillName}/execute`, {
+      const response = await fetch(`${API_BASE}/workflow/start-skill`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ arguments: args }),
+        body: JSON.stringify({ skillName, arguments: args }),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const execution = await response.json();
-      setLastExecution(execution);
-
-      return execution;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to execute skill');
-      throw err;
-    } finally {
+      const data = await response.json();
+      setWorkflowId(data.workflowId);
+      return data;
+    } catch (err: any) {
+      setError(err.message || 'Failed to start skill workflow');
       setExecuting(false);
+      throw err;
     }
   };
 
-  const handleExecuteSkill = async () => {
-    if (!selectedSkill) return;
+  const pollStatus = async () => {
+    if (!workflowId) return;
 
-    const args = executionArgs.trim() ? executionArgs.split(' ') : [];
     try {
-      await executeSkill(selectedSkill.name, args);
-      setExecutionDialog(false);
-      setExecutionArgs('');
+      const response = await fetch(`${API_BASE}/workflow/skill-status/${workflowId}`);
+      if (!response.ok) return;
+
+      const status: SkillExecutionStatus = await response.json();
+      setExecutionStatus(status);
+
+      if (status.status === 'Completed' || status.status === 'Failed') {
+        stopPolling();
+        setExecuting(false);
+      }
     } catch (err) {
-      // Error already set in executeSkill
+      console.error('Polling error:', err);
+    }
+  };
+
+  const stopPolling = () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
     }
   };
 
@@ -122,9 +154,52 @@ const SkillsManagement: React.FC = () => {
     setExecutionArgs('');
   };
 
+  const handleExecuteSkill = async () => {
+    if (!selectedSkill) return;
+
+    const args = executionArgs.trim() ? executionArgs.split(' ') : [];
+    try {
+      await startSkillWorkflow(selectedSkill.name, args);
+      closeExecutionDialog();
+    } catch (err) {
+      // Error handled in startSkillWorkflow
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!workflowId) return;
+
+    try {
+      await fetch(`${API_BASE}/workflow/signal/${workflowId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signal: 'HumanApprovalSignal', value: 'Approved' }),
+      });
+    } catch (err) {
+      setError('Failed to send approval signal');
+    }
+  };
+
+  useEffect(() => {
+    if (workflowId && executing) {
+      pollIntervalRef.current = setInterval(pollStatus, 1000);
+    }
+    return () => stopPolling();
+  }, [workflowId, executing]);
+
   useEffect(() => {
     fetchSkills();
   }, []);
+
+  const getStatusColor = (status: string): "primary" | "warning" | "success" | "error" | "default" => {
+    switch (status) {
+      case 'Running': return 'primary';
+      case 'Paused': return 'warning';
+      case 'Completed': return 'success';
+      case 'Failed': return 'error';
+      default: return 'default';
+    }
+  };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -137,25 +212,102 @@ const SkillsManagement: React.FC = () => {
           variant="contained"
           startIcon={<Refresh />}
           onClick={fetchSkills}
-          disabled={loading}
+          disabled={loading || executing}
         >
           {loading ? <CircularProgress size={20} /> : 'Refresh Skills'}
         </Button>
       </Box>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
-      {lastExecution && (
-        <Alert severity="success" sx={{ mb: 3 }}>
-          Skill "{lastExecution.skillName}" executed successfully!
-          {lastExecution.forkRequired && (
-            <> Running in forked context with agent: {lastExecution.agentType}</>
+      {executionStatus && (
+        <Paper elevation={3} sx={{ p: 3, mb: 4, bgcolor: 'background.paper', borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h5">
+              Executing: {executionStatus.skillName}
+            </Typography>
+            <Chip 
+              label={executionStatus.status} 
+              color={getStatusColor(executionStatus.status)}
+              sx={{ fontWeight: 'bold' }}
+            />
+          </Box>
+
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Step {executionStatus.currentStep} of {executionStatus.totalSteps}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {Math.round((executionStatus.currentStep / executionStatus.totalSteps) * 100)}%
+              </Typography>
+            </Box>
+            <LinearProgress 
+              variant="determinate" 
+              value={(executionStatus.currentStep / executionStatus.totalSteps) * 100} 
+              sx={{ height: 10, borderRadius: 5 }}
+            />
+          </Box>
+
+          {executionStatus.status === 'Paused' && (
+            <Alert severity="info" sx={{ mb: 2 }} action={
+              <Button color="inherit" size="small" onClick={handleApprove} startIcon={<PlayCircleFilled />}>
+                CONFIRM & PROCEED
+              </Button>
+            }>
+              <strong>Human Gate Triggered:</strong> This step requires manual confirmation of impact. Review the plan below and confirm to proceed.
+            </Alert>
           )}
-        </Alert>
+
+          <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+            Execution Log
+          </Typography>
+          <List sx={{ bgcolor: 'action.hover', borderRadius: 1 }}>
+            {executionStatus.stepResults.map((result, idx) => (
+              <React.Fragment key={idx}>
+                {idx > 0 && <Divider />}
+                <ListItem alignItems="flex-start">
+                  <Box sx={{ mr: 2, mt: 0.5 }}>
+                    {result.success ? 
+                      <CheckCircle color="success" /> : 
+                      <ErrorIcon color="error" />
+                    }
+                  </Box>
+                  <ListItemText
+                    primary={`Step ${result.stepNumber}`}
+                    secondaryTypographyProps={{ component: 'div' }}
+                    secondary={
+                      <Box component="pre" sx={{ 
+                        mt: 1, 
+                        p: 1, 
+                        bgcolor: 'common.black', 
+                        color: 'common.white', 
+                        borderRadius: 1,
+                        fontSize: '0.8rem',
+                        overflowX: 'auto',
+                        whiteSpace: 'pre-wrap'
+                      }}>
+                        {result.output}
+                      </Box>
+                    }
+                  />
+                </ListItem>
+              </React.Fragment>
+            ))}
+            {executing && executionStatus.status === 'Running' && (
+              <ListItem>
+                <Box sx={{ mr: 2 }}>
+                  <CircularProgress size={24} />
+                </Box>
+                <ListItemText primary={`Step ${executionStatus.currentStep} in progress...`} />
+              </ListItem>
+            )}
+          </List>
+        </Paper>
       )}
 
       <Grid container spacing={3}>
@@ -184,29 +336,7 @@ const SkillsManagement: React.FC = () => {
                       sx={{ ml: 1 }}
                     />
                   )}
-                  {skill.model && (
-                    <Chip
-                      label={`Model: ${skill.model}`}
-                      size="small"
-                      variant="outlined"
-                      sx={{ ml: 1 }}
-                    />
-                  )}
                 </Box>
-
-                {skill.argumentHint && (
-                  <Typography variant="caption" color="text.secondary">
-                    Args: {skill.argumentHint}
-                  </Typography>
-                )}
-
-                {skill.allowedTools && skill.allowedTools.length > 0 && (
-                  <Box sx={{ mt: 1 }}>
-                    <Typography variant="caption" color="text.secondary">
-                      Tools: {skill.allowedTools.join(', ')}
-                    </Typography>
-                  </Box>
-                )}
               </CardContent>
 
               <CardActions>
@@ -217,6 +347,13 @@ const SkillsManagement: React.FC = () => {
                   disabled={!skill.userInvocable}
                 >
                   Info
+                </Button>
+                <Button
+                  size="small"
+                  startIcon={<Description />}
+                  onClick={() => setViewMarkdownSkill(skill)}
+                >
+                  View MD
                 </Button>
                 <Button
                   size="small"
@@ -232,17 +369,6 @@ const SkillsManagement: React.FC = () => {
           </Grid>
         ))}
       </Grid>
-
-      {skills.length === 0 && !loading && (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            No skills available
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Skills will appear here once the backend discovers them from the .agents/skills or .claude/skills directories.
-          </Typography>
-        </Box>
-      )}
 
       {/* Skill Info Dialog */}
       <Dialog open={!!selectedSkill && !executionDialog} onClose={() => setSelectedSkill(null)} maxWidth="md" fullWidth>
@@ -275,28 +401,6 @@ const SkillsManagement: React.FC = () => {
                     <Typography variant="body2">{selectedSkill.argumentHint}</Typography>
                   </Grid>
                 )}
-                {selectedSkill.allowedTools && selectedSkill.allowedTools.length > 0 && (
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2">Allowed Tools:</Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {selectedSkill.allowedTools.map((tool) => (
-                        <Chip key={tool} label={tool} size="small" variant="outlined" />
-                      ))}
-                    </Box>
-                  </Grid>
-                )}
-                {selectedSkill.context && (
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2">Context:</Typography>
-                    <Typography variant="body2">{selectedSkill.context}</Typography>
-                  </Grid>
-                )}
-                {selectedSkill.model && (
-                  <Grid item xs={6}>
-                    <Typography variant="subtitle2">Model:</Typography>
-                    <Typography variant="body2">{selectedSkill.model}</Typography>
-                  </Grid>
-                )}
               </Grid>
             </Box>
           )}
@@ -321,12 +425,6 @@ const SkillsManagement: React.FC = () => {
             {selectedSkill?.description}
           </Typography>
 
-          {selectedSkill?.argumentHint && (
-            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-              Arguments: {selectedSkill.argumentHint}
-            </Typography>
-          )}
-
           <TextField
             fullWidth
             label="Arguments (space-separated)"
@@ -346,6 +444,41 @@ const SkillsManagement: React.FC = () => {
           >
             {executing ? 'Executing...' : 'Execute'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Skill Markdown Viewer Dialog */}
+      <Dialog 
+        open={!!viewMarkdownSkill} 
+        onClose={() => setViewMarkdownSkill(null)} 
+        maxWidth="lg" 
+        fullWidth
+      >
+        <DialogTitle>
+          SKILL.md: {viewMarkdownSkill?.name}
+        </DialogTitle>
+        <DialogContent dividers>
+          {viewMarkdownSkill && (
+            <Box sx={{ p: 1 }}>
+              <MarkdownContent content={viewMarkdownSkill.content} />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setViewMarkdownSkill(null)}>Close</Button>
+          {viewMarkdownSkill?.userInvocable && (
+            <Button 
+              variant="contained" 
+              startIcon={<PlayArrow />}
+              onClick={() => {
+                const skill = viewMarkdownSkill;
+                setViewMarkdownSkill(null);
+                openExecutionDialog(skill);
+              }}
+            >
+              Execute This Skill
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

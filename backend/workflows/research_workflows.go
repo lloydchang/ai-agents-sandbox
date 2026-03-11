@@ -7,107 +7,13 @@ import (
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 	"github.com/lloydchang/ai-agents-sandbox/backend/activities"
-	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
 	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
-// ResearchRequest represents a research request
-type ResearchRequest struct {
-	Query              string                 `json:"query"`
-	ResearchType       string                 `json:"researchType"` // "deep", "quick", "comparative"
-	MaxSources         int                    `json:"maxSources"`
-	MaxDepth           int                    `json:"maxDepth"`
-	IncludeKnowledgeGraph bool              `json:"includeKnowledgeGraph"`
-	StreamEvents       bool                   `json:"streamEvents"`
-	LLMProvider        string                 `json:"llmProvider"`
-	LLMModel           string                 `json:"llmModel"`
-	Context            map[string]interface{} `json:"context"`
-}
 
-// ResearchState represents the state of a research workflow
-type ResearchState struct {
-	Query              string                 `json:"query"`
-	ResearchType       string                 `json:"researchType"`
-	CurrentPhase       string                 `json:"currentPhase"`
-	Status             string                 `json:"status"`
-	Sources            []ResearchSource       `json:"sources"`
-	KnowledgeGraph     []KnowledgeNode        `json:"knowledgeGraph"`
-	Findings           []ResearchFinding      `json:"findings"`
-	Synthesis          string                 `json:"synthesis"`
-	StartTime          time.Time              `json:"startTime"`
-	EndTime            time.Time              `json:"endTime"`
-	LLMProvider        string                 `json:"llmProvider"`
-	LLMModel           string                 `json:"llmModel"`
-	Context            map[string]interface{} `json:"context"`
-	EventStream        []ResearchEvent        `json:"eventStream"`
-	AgentCollaboration []AgentContribution    `json:"agentCollaboration"`
-}
-
-// ResearchSource represents a research source
-type ResearchSource struct {
-	ID          string                 `json:"id"`
-	Title       string                 `json:"title"`
-	URL         string                 `json:"url"`
-	Content     string                 `json:"content"`
-	Relevance   float64                `json:"relevance"`
-	Credibility float64                `json:"credibility"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Metadata    map[string]interface{} `json:"metadata"`
-}
-
-// KnowledgeNode represents a node in the knowledge graph
-type KnowledgeNode struct {
-	ID          string                 `json:"id"`
-	Label       string                 `json:"label"`
-	Type        string                 `json:"type"`
-	Properties  map[string]interface{} `json:"properties"`
-	Relationships []KnowledgeEdge      `json:"relationships"`
-	CreatedAt   time.Time              `json:"createdAt"`
-}
-
-// KnowledgeEdge represents a relationship in the knowledge graph
-type KnowledgeEdge struct {
-	ID         string                 `json:"id"`
-	Source     string                 `json:"source"`
-	Target     string                 `json:"target"`
-	Type       string                 `json:"type"`
-	Weight     float64                `json:"weight"`
-	Properties map[string]interface{} `json:"properties"`
-}
-
-// ResearchFinding represents a research finding
-type ResearchFinding struct {
-	ID          string                 `json:"id"`
-	Title       string                 `json:"title"`
-	Description string                 `json:"description"`
-	Confidence  float64                `json:"confidence"`
-	Sources     []string               `json:"sources"`
-	Category    string                 `json:"category"`
-	Timestamp   time.Time              `json:"timestamp"`
-	Metadata    map[string]interface{} `json:"metadata"`
-}
-
-// ResearchEvent represents an event in the research process
-type ResearchEvent struct {
-	ID        string                 `json:"id"`
-	Type      string                 `json:"type"`
-	Message   string                 `json:"message"`
-	Timestamp time.Time              `json:"timestamp"`
-	Data      map[string]interface{} `json:"data"`
-}
-
-// AgentContribution represents an agent's contribution to research
-type AgentContribution struct {
-	AgentID    string                 `json:"agentId"`
-	AgentType  string                 `json:"agentType"`
-	Contribution string               `json:"contribution"`
-	Confidence float64                `json:"confidence"`
-	Timestamp  time.Time              `json:"timestamp"`
-	Sources    []string               `json:"sources"`
-}
 
 // DeepResearchWorkflow orchestrates multi-agent deep research
-func DeepResearchWorkflow(ctx workflow.Context, request ResearchRequest) (*ResearchState, error) {
+func DeepResearchWorkflow(ctx workflow.Context, request types.ResearchRequest) (*types.ResearchState, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("Starting Deep Research Workflow", "query", request.Query, "type", request.ResearchType)
 
@@ -124,20 +30,20 @@ func DeepResearchWorkflow(ctx workflow.Context, request ResearchRequest) (*Resea
 	ctx = workflow.WithActivityOptions(ctx, activityOptions)
 
 	// Initialize research state
-	state := &ResearchState{
+	state := &types.ResearchState{
 		Query:              request.Query,
 		ResearchType:       request.ResearchType,
 		CurrentPhase:       "initialization",
 		Status:             "running",
-		Sources:            []ResearchSource{},
-		KnowledgeGraph:     []KnowledgeNode{},
-		Findings:           []ResearchFinding{},
+		Sources:            []types.ResearchSource{},
+		KnowledgeGraph:     []types.KnowledgeNode{},
+		Findings:           []types.ResearchFinding{},
 		StartTime:          workflow.Now(ctx),
 		LLMProvider:        request.LLMProvider,
 		LLMModel:           request.LLMModel,
 		Context:            request.Context,
-		EventStream:        []ResearchEvent{},
-		AgentCollaboration: []AgentContribution{},
+		EventStream:        []types.ResearchEvent{},
+		AgentCollaboration: []types.AgentContribution{},
 	}
 
 	// Phase 1: Query Analysis and Planning
@@ -202,11 +108,11 @@ func DeepResearchWorkflow(ctx workflow.Context, request ResearchRequest) (*Resea
 }
 
 // executeResearchPlanning plans the research approach
-func executeResearchPlanning(ctx workflow.Context, state *ResearchState, request ResearchRequest) error {
+func executeResearchPlanning(ctx workflow.Context, state *types.ResearchState, request types.ResearchRequest) error {
 	logger := workflow.GetLogger(ctx)
 
 	// Add event
-	event := ResearchEvent{
+	event := types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_start",
 		Message:   "Starting research planning phase",
@@ -233,7 +139,7 @@ func executeResearchPlanning(ctx workflow.Context, state *ResearchState, request
 	state.Context["researchPlan"] = plan
 
 	// Add completion event
-	event = ResearchEvent{
+	event = types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_complete",
 		Message:   "Research planning completed",
@@ -249,11 +155,11 @@ func executeResearchPlanning(ctx workflow.Context, state *ResearchState, request
 }
 
 // executeSourceDiscovery discovers relevant sources
-func executeSourceDiscovery(ctx workflow.Context, state *ResearchState, request ResearchRequest) error {
+func executeSourceDiscovery(ctx workflow.Context, state *types.ResearchState, request types.ResearchRequest) error {
 	logger := workflow.GetLogger(ctx)
 
 	// Add event
-	event := ResearchEvent{
+	event := types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_start",
 		Message:   "Starting source discovery phase",
@@ -262,10 +168,10 @@ func executeSourceDiscovery(ctx workflow.Context, state *ResearchState, request 
 	state.EventStream = append(state.EventStream, event)
 
 	// Discover sources using multiple agents
-	var sources []ResearchSource
+	var sources []types.ResearchSource
 	
 	// Web search agent
-	var webSources []ResearchSource
+	var webSources []types.ResearchSource
 	err := workflow.ExecuteActivity(ctx, activities.DiscoverWebSourcesActivity, 
 		request.Query, request.MaxSources/2).Get(ctx, &webSources)
 	if err != nil {
@@ -274,7 +180,7 @@ func executeSourceDiscovery(ctx workflow.Context, state *ResearchState, request 
 		sources = append(sources, webSources...)
 		
 		// Record agent contribution
-		contribution := AgentContribution{
+		contribution := types.AgentContribution{
 			AgentID:       "web-search-agent",
 			AgentType:     "web-search",
 			Contribution:  fmt.Sprintf("Discovered %d web sources", len(webSources)),
@@ -286,7 +192,7 @@ func executeSourceDiscovery(ctx workflow.Context, state *ResearchState, request 
 	}
 
 	// Database search agent
-	var dbSources []ResearchSource
+	var dbSources []types.ResearchSource
 	err = workflow.ExecuteActivity(ctx, activities.DiscoverDatabaseSourcesActivity, 
 		request.Query, request.MaxSources/2).Get(ctx, &dbSources)
 	if err != nil {
@@ -295,7 +201,7 @@ func executeSourceDiscovery(ctx workflow.Context, state *ResearchState, request 
 		sources = append(sources, dbSources...)
 		
 		// Record agent contribution
-		contribution := AgentContribution{
+		contribution := types.AgentContribution{
 			AgentID:       "database-search-agent",
 			AgentType:     "database-search",
 			Contribution:  fmt.Sprintf("Discovered %d database sources", len(dbSources)),
@@ -318,7 +224,7 @@ func executeSourceDiscovery(ctx workflow.Context, state *ResearchState, request 
 	state.Sources = sources
 
 	// Add completion event
-	event = ResearchEvent{
+	event = types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_complete",
 		Message:   fmt.Sprintf("Source discovery completed with %d sources", len(sources)),
@@ -334,11 +240,11 @@ func executeSourceDiscovery(ctx workflow.Context, state *ResearchState, request 
 }
 
 // executeKnowledgeGraphConstruction builds a knowledge graph
-func executeKnowledgeGraphConstruction(ctx workflow.Context, state *ResearchState, request ResearchRequest) error {
+func executeKnowledgeGraphConstruction(ctx workflow.Context, state *types.ResearchState, request types.ResearchRequest) error {
 	logger := workflow.GetLogger(ctx)
 
 	// Add event
-	event := ResearchEvent{
+	event := types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_start",
 		Message:   "Starting knowledge graph construction",
@@ -347,7 +253,7 @@ func executeKnowledgeGraphConstruction(ctx workflow.Context, state *ResearchStat
 	state.EventStream = append(state.EventStream, event)
 
 	// Build knowledge graph from sources
-	var knowledgeGraph []KnowledgeNode
+	var knowledgeGraph []types.KnowledgeNode
 	err := workflow.ExecuteActivity(ctx, activities.BuildKnowledgeGraphActivity, 
 		state.Sources, request.MaxDepth).Get(ctx, &knowledgeGraph)
 	if err != nil {
@@ -357,7 +263,7 @@ func executeKnowledgeGraphConstruction(ctx workflow.Context, state *ResearchStat
 	state.KnowledgeGraph = knowledgeGraph
 
 	// Record agent contribution
-	contribution := AgentContribution{
+	contribution := types.AgentContribution{
 		AgentID:       "knowledge-graph-agent",
 		AgentType:     "knowledge-graph",
 		Contribution:  fmt.Sprintf("Built knowledge graph with %d nodes", len(knowledgeGraph)),
@@ -368,7 +274,7 @@ func executeKnowledgeGraphConstruction(ctx workflow.Context, state *ResearchStat
 	state.AgentCollaboration = append(state.AgentCollaboration, contribution)
 
 	// Add completion event
-	event = ResearchEvent{
+	event = types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_complete",
 		Message:   fmt.Sprintf("Knowledge graph construction completed with %d nodes", len(knowledgeGraph)),
@@ -384,11 +290,11 @@ func executeKnowledgeGraphConstruction(ctx workflow.Context, state *ResearchStat
 }
 
 // executeMultiAgentAnalysis performs multi-agent analysis
-func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, request ResearchRequest) error {
+func executeMultiAgentAnalysis(ctx workflow.Context, state *types.ResearchState, request types.ResearchRequest) error {
 	logger := workflow.GetLogger(ctx)
 
 	// Add event
-	event := ResearchEvent{
+	event := types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_start",
 		Message:   "Starting multi-agent analysis",
@@ -397,10 +303,10 @@ func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, reque
 	state.EventStream = append(state.EventStream, event)
 
 	// Analyze sources with different agent types
-	var findings []ResearchFinding
+	var findings []types.ResearchFinding
 
 	// Content analysis agent
-	var contentFindings []ResearchFinding
+	var contentFindings []types.ResearchFinding
 	err := workflow.ExecuteActivity(ctx, activities.AnalyzeContentActivity, 
 		state.Sources, request.Query).Get(ctx, &contentFindings)
 	if err != nil {
@@ -409,7 +315,7 @@ func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, reque
 		findings = append(findings, contentFindings...)
 		
 		// Record agent contribution
-		contribution := AgentContribution{
+		contribution := types.AgentContribution{
 			AgentID:       "content-analysis-agent",
 			AgentType:     "content-analysis",
 			Contribution:  fmt.Sprintf("Generated %d content findings", len(contentFindings)),
@@ -421,7 +327,7 @@ func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, reque
 	}
 
 	// Pattern analysis agent
-	var patternFindings []ResearchFinding
+	var patternFindings []types.ResearchFinding
 	err = workflow.ExecuteActivity(ctx, activities.AnalyzePatternsActivity, 
 		state.Sources, state.KnowledgeGraph).Get(ctx, &patternFindings)
 	if err != nil {
@@ -430,7 +336,7 @@ func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, reque
 		findings = append(findings, patternFindings...)
 		
 		// Record agent contribution
-		contribution := AgentContribution{
+		contribution := types.AgentContribution{
 			AgentID:       "pattern-analysis-agent",
 			AgentType:     "pattern-analysis",
 			Contribution:  fmt.Sprintf("Generated %d pattern findings", len(patternFindings)),
@@ -442,7 +348,7 @@ func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, reque
 	}
 
 	// Sentiment analysis agent
-	var sentimentFindings []ResearchFinding
+	var sentimentFindings []types.ResearchFinding
 	err = workflow.ExecuteActivity(ctx, activities.AnalyzeSentimentActivity, 
 		state.Sources).Get(ctx, &sentimentFindings)
 	if err != nil {
@@ -451,7 +357,7 @@ func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, reque
 		findings = append(findings, sentimentFindings...)
 		
 		// Record agent contribution
-		contribution := AgentContribution{
+		contribution := types.AgentContribution{
 			AgentID:       "sentiment-analysis-agent",
 			AgentType:     "sentiment-analysis",
 			Contribution:  fmt.Sprintf("Generated %d sentiment findings", len(sentimentFindings)),
@@ -469,7 +375,7 @@ func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, reque
 	state.Findings = findings
 
 	// Add completion event
-	event = ResearchEvent{
+	event = types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_complete",
 		Message:   fmt.Sprintf("Multi-agent analysis completed with %d findings", len(findings)),
@@ -485,11 +391,11 @@ func executeMultiAgentAnalysis(ctx workflow.Context, state *ResearchState, reque
 }
 
 // executeSynthesis generates final synthesis
-func executeSynthesis(ctx workflow.Context, state *ResearchState, request ResearchRequest) error {
+func executeSynthesis(ctx workflow.Context, state *types.ResearchState, request types.ResearchRequest) error {
 	logger := workflow.GetLogger(ctx)
 
 	// Add event
-	event := ResearchEvent{
+	event := types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_start",
 		Message:   "Starting synthesis phase",
@@ -509,7 +415,7 @@ func executeSynthesis(ctx workflow.Context, state *ResearchState, request Resear
 	state.Synthesis = synthesis
 
 	// Record agent contribution
-	contribution := AgentContribution{
+	contribution := types.AgentContribution{
 		AgentID:       "synthesis-agent",
 		AgentType:     "synthesis",
 		Contribution:  "Generated comprehensive research synthesis",
@@ -520,7 +426,7 @@ func executeSynthesis(ctx workflow.Context, state *ResearchState, request Resear
 	state.AgentCollaboration = append(state.AgentCollaboration, contribution)
 
 	// Add completion event
-	event = ResearchEvent{
+	event = types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_complete",
 		Message:   "Synthesis phase completed",
@@ -536,11 +442,11 @@ func executeSynthesis(ctx workflow.Context, state *ResearchState, request Resear
 }
 
 // executeEventStreaming streams research events
-func executeEventStreaming(ctx workflow.Context, state *ResearchState, request ResearchRequest) error {
+func executeEventStreaming(ctx workflow.Context, state *types.ResearchState, request types.ResearchRequest) error {
 	logger := workflow.GetLogger(ctx)
 
 	// Add event
-	event := ResearchEvent{
+	event := types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_start",
 		Message:   "Starting event streaming",
@@ -557,7 +463,7 @@ func executeEventStreaming(ctx workflow.Context, state *ResearchState, request R
 	}
 
 	// Add completion event
-	event = ResearchEvent{
+	event = types.ResearchEvent{
 		ID:        generateEventID(),
 		Type:      "phase_complete",
 		Message:   "Event streaming completed",
@@ -575,7 +481,7 @@ func generateEventID() string {
 	return fmt.Sprintf("event_%d", time.Now().UnixNano())
 }
 
-func extractSourceIDs(sources []ResearchSource) []string {
+func extractSourceIDs(sources []types.ResearchSource) []string {
 	var ids []string
 	for _, source := range sources {
 		ids = append(ids, source.ID)
@@ -583,9 +489,9 @@ func extractSourceIDs(sources []ResearchSource) []string {
 	return ids
 }
 
-func deduplicateSources(sources []ResearchSource) []ResearchSource {
+func deduplicateSources(sources []types.ResearchSource) []types.ResearchSource {
 	seen := make(map[string]bool)
-	var result []ResearchSource
+	var result []types.ResearchSource
 	
 	for _, source := range sources {
 		if !seen[source.URL] {
@@ -597,15 +503,15 @@ func deduplicateSources(sources []ResearchSource) []ResearchSource {
 	return result
 }
 
-func rankSources(sources []ResearchSource, query string) []ResearchSource {
+func rankSources(sources []types.ResearchSource, query string) []types.ResearchSource {
 	// Simple ranking by relevance (in real implementation would use more sophisticated algorithms)
 	// For now, just return as-is
 	return sources
 }
 
-func deduplicateFindings(findings []ResearchFinding) []ResearchFinding {
+func deduplicateFindings(findings []types.ResearchFinding) []types.ResearchFinding {
 	seen := make(map[string]bool)
-	var result []ResearchFinding
+	var result []types.ResearchFinding
 	
 	for _, finding := range findings {
 		key := fmt.Sprintf("%s-%s", finding.Category, finding.Title)
@@ -618,7 +524,7 @@ func deduplicateFindings(findings []ResearchFinding) []ResearchFinding {
 	return result
 }
 
-func rankFindings(findings []ResearchFinding, query string) []ResearchFinding {
+func rankFindings(findings []types.ResearchFinding, query string) []types.ResearchFinding {
 	// Simple ranking by confidence (in real implementation would use more sophisticated algorithms)
 	// Sort by confidence descending
 	for i := 0; i < len(findings)-1; i++ {
@@ -633,6 +539,6 @@ func rankFindings(findings []ResearchFinding, query string) []ResearchFinding {
 }
 
 // GetResearchStateQuery returns the current state of the research workflow
-func GetResearchStateQuery(ctx workflow.Context, state *ResearchState) (*ResearchState, error) {
+func GetResearchStateQuery(ctx workflow.Context, state *types.ResearchState) (*types.ResearchState, error) {
 	return state, nil
 }

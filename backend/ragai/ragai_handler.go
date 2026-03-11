@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
-	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // RagAIHandler handles RAG AI API endpoints

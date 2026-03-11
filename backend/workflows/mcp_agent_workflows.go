@@ -8,7 +8,6 @@ import (
 	"go.temporal.io/sdk/workflow"
 	"github.com/lloydchang/ai-agents-sandbox/backend/activities"
 	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
-	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // GoalBasedAgentRequest represents a request for goal-based agent execution
@@ -29,7 +28,7 @@ type GoalBasedAgentState struct {
 	MaxTurns       int                    `json:"maxTurns"`
 	Status         string                 `json:"status"`
 	ToolsUsed      []string               `json:"toolsUsed"`
-	Conversation   []ConversationTurn     `json:"conversation"`
+	Conversation   []GoalConversationTurn     `json:"conversation"`
 	StartTime      time.Time              `json:"startTime"`
 	LastUpdateTime time.Time              `json:"lastUpdateTime"`
 	LLMProvider     string                 `json:"llmProvider"`
@@ -37,8 +36,8 @@ type GoalBasedAgentState struct {
 	Context         map[string]interface{} `json:"context"`
 }
 
-// ConversationTurn represents a single turn in the conversation
-type ConversationTurn struct {
+// GoalConversationTurn represents a single turn in the conversation
+type GoalConversationTurn struct {
 	TurnNumber   int                    `json:"turnNumber"`
 	AgentType    string                 `json:"agentType"`
 	Message      string                 `json:"message"`
@@ -72,7 +71,7 @@ func GoalBasedAgentWorkflow(ctx workflow.Context, request GoalBasedAgentRequest)
 		MaxTurns:        request.MaxTurns,
 		Status:          "running",
 		ToolsUsed:       []string{},
-		Conversation:    []ConversationTurn{},
+		Conversation:    []GoalConversationTurn{},
 		StartTime:       workflow.Now(ctx),
 		LastUpdateTime:  workflow.Now(ctx),
 		LLMProvider:     request.LLMProvider,
@@ -98,7 +97,7 @@ func GoalBasedAgentWorkflow(ctx workflow.Context, request GoalBasedAgentRequest)
 		state.LastUpdateTime = workflow.Now(ctx)
 
 		// Execute conversation turn
-		turn, err := executeConversationTurn(ctx, state, goalTools, request.AgentType)
+		turn, err := executeGoalConversationTurn(ctx, state, goalTools, request.AgentType)
 		if err != nil {
 			logger.Error("Failed to execute conversation turn", "turn", state.CurrentTurn, "error", err)
 			state.Status = "failed"
@@ -123,7 +122,7 @@ func GoalBasedAgentWorkflow(ctx workflow.Context, request GoalBasedAgentRequest)
 		// Check for human input if needed
 		if needsHumanInput(turn) {
 			logger.Info("Waiting for human input", "turn", state.CurrentTurn)
-			humanInput, err := waitForHumanInput(ctx, fmt.Sprintf("human-input-%d", state.CurrentTurn))
+			humanInput, err := waitForGoalHumanInput(ctx, fmt.Sprintf("human-input-%d", state.CurrentTurn))
 			if err != nil {
 				logger.Error("Failed to get human input", "error", err)
 				state.Status = "failed"
@@ -131,7 +130,7 @@ func GoalBasedAgentWorkflow(ctx workflow.Context, request GoalBasedAgentRequest)
 			}
 
 			// Add human input as a turn
-			humanTurn := ConversationTurn{
+			humanTurn := GoalConversationTurn{
 				TurnNumber: state.CurrentTurn,
 				AgentType:  "human",
 				Message:    humanInput,
@@ -152,11 +151,11 @@ func GoalBasedAgentWorkflow(ctx workflow.Context, request GoalBasedAgentRequest)
 	return state, nil
 }
 
-// executeConversationTurn executes a single conversation turn
-func executeConversationTurn(ctx workflow.Context, state *GoalBasedAgentState, availableTools []mcp.MCPTool, agentType string) (*ConversationTurn, error) {
+// executeGoalConversationTurn executes a single conversation turn
+func executeGoalConversationTurn(ctx workflow.Context, state *GoalBasedAgentState, availableTools []mcp.MCPTool, agentType string) (*GoalConversationTurn, error) {
 	logger := workflow.GetLogger(ctx)
 
-	turn := &ConversationTurn{
+	turn := &GoalConversationTurn{
 		TurnNumber: state.CurrentTurn,
 		AgentType:  agentType,
 		Timestamp:  workflow.Now(ctx),
@@ -364,13 +363,13 @@ func isGoalAchieved(state *GoalBasedAgentState, goal string) bool {
 }
 
 // needsHumanInput determines if human input is needed
-func needsHumanInput(turn *ConversationTurn) bool {
+func needsHumanInput(turn *GoalConversationTurn) bool {
 	// Simple implementation - check if the response asks for input
 	return containsAny(turn.Response, []string{"?", "please", "need", "require", "clarify"})
 }
 
-// waitForHumanInput waits for human input via a signal
-func waitForHumanInput(ctx workflow.Context, signalName string) (string, error) {
+// waitForGoalHumanInput waits for human input via a signal
+func waitForGoalHumanInput(ctx workflow.Context, signalName string) (string, error) {
 	signalChan := workflow.GetSignalChannel(ctx, signalName)
 	
 	var input string
@@ -380,7 +379,7 @@ func waitForHumanInput(ctx workflow.Context, signalName string) (string, error) 
 }
 
 // updateContext updates the agent context with turn results
-func updateContext(state *GoalBasedAgentState, turn *ConversationTurn) {
+func updateContext(state *GoalBasedAgentState, turn *GoalConversationTurn) {
 	// Add turn results to context
 	if state.Context == nil {
 		state.Context = make(map[string]interface{})

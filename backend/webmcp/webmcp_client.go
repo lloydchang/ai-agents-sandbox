@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/lloydchang/backstage-temporal/backend/mcp"
+	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
 )
 
 // WebMCPClient represents a web-based MCP client
@@ -245,7 +245,7 @@ func (w *WebMCPClient) handleInitialize(wsConn *WebSocketConnection, msg *WebMCP
 
 // handleToolsList handles listing available tools
 func (w *WebMCPClient) handleToolsList(wsConn *WebSocketConnection, msg *WebMCPMessage) {
-	tools := w.mcpServer.ListTools()
+	tools := w.mcpServer.GetTools()
 
 	toolList := make([]map[string]interface{}, 0, len(tools))
 	for _, tool := range tools {
@@ -292,7 +292,13 @@ func (w *WebMCPClient) handleToolsCall(wsConn *WebSocketConnection, msg *WebMCPM
 	// Execute tool asynchronously
 	go func() {
 		ctx := context.Background()
-		result, err := w.mcpServer.CallTool(ctx, toolName, toolArgs)
+		var result map[string]interface{}
+		var err error
+		if tool, exists := w.mcpServer.GetTools()[toolName]; !exists {
+			err = fmt.Errorf("tool not found")
+		} else {
+			result, err = tool.Handler(ctx, toolArgs)
+		}
 
 		var response WebMCPMessage
 		if err != nil {
@@ -320,7 +326,7 @@ func (w *WebMCPClient) handleToolsCall(wsConn *WebSocketConnection, msg *WebMCPM
 
 // handleResourcesList handles listing available resources
 func (w *WebMCPClient) handleResourcesList(wsConn *WebSocketConnection, msg *WebMCPMessage) {
-	resources := w.mcpServer.ListResources()
+	resources := w.mcpServer.GetResources()
 
 	resourceList := make([]map[string]interface{}, 0, len(resources))
 	for _, resource := range resources {
@@ -366,7 +372,13 @@ func (w *WebMCPClient) handleResourcesRead(wsConn *WebSocketConnection, msg *Web
 	// Read resource asynchronously
 	go func() {
 		ctx := context.Background()
-		content, err := w.mcpServer.ReadResource(ctx, uri)
+		var content interface{}
+		var err error
+		if resource, exists := w.mcpServer.GetResources()[uri]; !exists {
+			err = fmt.Errorf("resource not found")
+		} else {
+			content, err = resource.Handler(ctx, uri)
+		}
 
 		var response WebMCPMessage
 		if err != nil {
@@ -389,7 +401,7 @@ func (w *WebMCPClient) handleResourcesRead(wsConn *WebSocketConnection, msg *Web
 						{
 							"uri":      uri,
 							"mimeType": "application/json",
-							"text":     string(content),
+							"text":     fmt.Sprintf("%v", content),
 						},
 					},
 				},

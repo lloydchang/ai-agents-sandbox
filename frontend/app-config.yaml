@@ -2,18 +2,28 @@ app:
   title: Backstage + Temporal Sandbox
 
 backend:
-  baseUrl: http://localhost:7007
+  baseUrl: http://localhost:8081
   listen:
-    port: 7007
+    port: 8081
 
 organization:
   name: Backstage
 
 frontend:
-  baseUrl: http://localhost:3001
+  baseUrl: http://localhost:3000
 
 techdocs:
   storageUrl: http://localhost:7007/api/techdocs/static/docs
+
+proxy:
+  '/temporal-proxy':
+    target: http://localhost:8081/api/temporal-proxy
+    changeOrigin: true
+    pathRewrite:
+      '^/api/proxy/temporal-proxy': ''
+  '/catalog':
+    target: http://localhost:8081/api/catalog
+    changeOrigin: true
 
 auth:
   environment: development

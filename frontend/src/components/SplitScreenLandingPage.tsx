@@ -1,34 +1,34 @@
 import React from 'react';
 import { Grid, Paper, Typography, Button, Box } from '@mui/material';
 import {
-  ViewColumn,
-  Timeline,
-  AccountTree,
-  Speed,
+  Extension,
+  ViewQuilt,
+  Autorenew,
+  LibraryBooks,
 } from '@mui/icons-material';
 
 export const SplitScreenLandingPage: React.FC = () => {
   const features = [
     {
-      icon: <ViewColumn fontSize="large" />,
+      icon: <Extension fontSize="large" />,
       title: 'AI Agent Skills',
       description: '.agents/skills/ and .claude/skills/',
       path: '/skills'
     },
     {
-      icon: <Timeline fontSize="large" />,
+      icon: <ViewQuilt fontSize="large" />,
       title: 'Split Screen View',
       description: 'View Backstage and Temporal side-by-side for seamless workflow management',
       path: '/split-screen'
     },
     {
-      icon: <AccountTree fontSize="large" />,
+      icon: <Autorenew fontSize="large" />,
       title: 'Temporal Workflows',
       description: 'Manage and monitor your Temporal workflows with advanced AI agent orchestration',
       path: '/temporal'
     },
     {
-      icon: <Speed fontSize="large" />,
+      icon: <LibraryBooks fontSize="large" />,
       title: 'Backstage Catalog',
       description: 'Explore your software catalog and manage components, APIs, and infrastructure',
       path: '/catalog'

@@ -8,7 +8,6 @@ import (
 	"go.temporal.io/sdk/client"
 
 	"github.com/lloydchang/ai-agents-sandbox/backend/types"
-	"github.com/lloydchang/ai-agents-sandbox/backend/workflows"
 )
 
 // registerDefaultTools registers the default MCP tools
@@ -315,7 +314,7 @@ func (s *MCPServer) handleStartComplianceWorkflow(ctx context.Context, params ma
 	}
 
 	we, err := s.temporalClient.ExecuteWorkflow(ctx, workflowOptions, 
-		workflows.AIAgentOrchestrationWorkflowV2, request)
+		"AIAgentOrchestrationWorkflowV2", request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start compliance workflow: %w", err)
 	}
@@ -366,7 +365,7 @@ func (s *MCPServer) handleStartSecurityScan(ctx context.Context, params map[stri
 	}
 
 	we, err := s.temporalClient.ExecuteWorkflow(ctx, workflowOptions, 
-		workflows.AIAgentOrchestrationWorkflowV2, request)
+		"AIAgentOrchestrationWorkflowV2", request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start security scan: %w", err)
 	}
@@ -418,7 +417,7 @@ func (s *MCPServer) handleStartCostAnalysis(ctx context.Context, params map[stri
 	}
 
 	we, err := s.temporalClient.ExecuteWorkflow(ctx, workflowOptions, 
-		workflows.AIAgentOrchestrationWorkflowV2, request)
+		"AIAgentOrchestrationWorkflowV2", request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start cost analysis: %w", err)
 	}
@@ -610,7 +609,7 @@ func (s *MCPServer) handleStartConversation(ctx context.Context, params map[stri
 	}
 
 	// Create conversation request
-	request := workflows.ConversationRequest{
+	request := mcpConversationRequest{
 		UserID:       userId,
 		Goal:         goal,
 		InitialInput: initialInput,
@@ -628,7 +627,7 @@ func (s *MCPServer) handleStartConversation(ctx context.Context, params map[stri
 	}
 
 	we, err := s.temporalClient.ExecuteWorkflow(ctx, workflowOptions, 
-		workflows.ConversationalAgentWorkflow, request)
+		"ConversationalAgentWorkflow", request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start conversation: %w", err)
 	}
@@ -689,7 +688,7 @@ func (s *MCPServer) handleGetConversationStatus(ctx context.Context, params map[
 		return nil, fmt.Errorf("failed to query conversation state: %w", err)
 	}
 
-	var state workflows.ConversationState
+	var state mcpConversationState
 	if err := response.Get(&state); err != nil {
 		return nil, fmt.Errorf("failed to get conversation state: %w", err)
 	}
@@ -717,4 +716,34 @@ func (s *MCPServer) handleGetConversationStatus(ctx context.Context, params map[
 	}
 
 	return result, nil
+}
+
+// Local structures to avoid import cycle with workflows package
+
+type mcpConversationRequest struct {
+	UserID        string                 `json:"userId"`
+	Goal          string                 `json:"goal"`
+	InitialInput  string                 `json:"initialInput,omitempty"`
+	LLMProvider   string                 `json:"llmProvider"`
+	LLMModel      string                 `json:"llmModel"`
+	MaxTurns      int                    `json:"maxTurns"`
+	ToolsEnabled  []string               `json:"toolsEnabled"`
+	Context       map[string]interface{} `json:"context,omitempty"`
+}
+
+type mcpConversationState struct {
+	SessionID       string                    `json:"sessionId"`
+	UserID          string                    `json:"userId"`
+	ConversationID  string                    `json:"conversationId"`
+	Goal            string                    `json:"goal"`
+	CurrentTurn     int                       `json:"currentTurn"`
+	MaxTurns        int                       `json:"maxTurns"`
+	Status          string                    `json:"status"` 
+	History         []map[string]interface{}  `json:"history"`
+	Context         map[string]interface{}    `json:"context"`
+	ToolsUsed       []string                  `json:"toolsUsed"`
+	StartTime       time.Time                 `json:"startTime"`
+	LastUpdateTime  time.Time                 `json:"lastUpdateTime"`
+	LLMProvider     string                    `json:"llmProvider"`
+	LLMModel        string                    `json:"llmModel"`
 }

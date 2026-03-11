@@ -1,8 +1,6 @@
 package websocket
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // WebSocketMessage represents a WebSocket message

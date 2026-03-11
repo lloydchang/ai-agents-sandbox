@@ -8,7 +8,6 @@ import (
 	"go.temporal.io/sdk/workflow"
 	"github.com/lloydchang/ai-agents-sandbox/backend/activities"
 	"github.com/lloydchang/ai-agents-sandbox/backend/mcp"
-	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // ReActAgentRequest represents a request for ReAct-style agent execution
@@ -144,7 +143,7 @@ func ReActAgentWorkflow(ctx workflow.Context, request ReActAgentRequest) (*ReAct
 
 		// Step 3: Observation (if tools were called)
 		if len(toolCalls) > 0 {
-			observations, err := executeReActObservation(ctx, toolCalls)
+			observations, err := executeReActObservation(ctx, state, toolCalls)
 			if err != nil {
 				logger.Error("Failed to generate observation", "step", state.CurrentStep, "error", err)
 				state.Status = "failed"
@@ -251,7 +250,7 @@ func executeReActAction(ctx workflow.Context, state *ReActAgentState, tools []mc
 }
 
 // executeReActObservation generates observations from tool results
-func executeReActObservation(ctx workflow.Context, toolCalls []mcp.MCPToolCall) (string, error) {
+func executeReActObservation(ctx workflow.Context, state *ReActAgentState, toolCalls []mcp.MCPToolCall) (string, error) {
 	logger := workflow.GetLogger(ctx)
 
 	// Extract tool results

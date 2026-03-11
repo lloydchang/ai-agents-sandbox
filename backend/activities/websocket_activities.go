@@ -290,7 +290,7 @@ func (wsa *WebSocketActivities) CreateNotificationActivity(ctx context.Context, 
 
 // SendHeartbeatActivity sends a heartbeat message
 func (wsa *WebSocketActivities) SendHeartbeatActivity(ctx context.Context) error {
-	logger := activity.GetLogger(ctx)
+	_ = activity.GetLogger(ctx)
 
 	heartbeatData := map[string]interface{}{
 		"status":    "alive",

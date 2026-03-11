@@ -7,6 +7,7 @@ import (
 
 	"go.temporal.io/sdk/activity"
 	"github.com/lloydchang/ai-agents-sandbox/backend/bedrock"
+	"github.com/lloydchang/ai-agents-sandbox/backend/types"
 )
 
 // BedrockActivities provides activities for AWS Bedrock integration
@@ -193,7 +194,7 @@ func (ba *BedrockActivities) GetBedrockModelsActivity(ctx context.Context) ([]be
 }
 
 // ValidateBedrockRequestActivity validates a Bedrock request
-func (ba *BedrockActivities) ValidateBedrockRequestActivity(ctx context.Context, request bedrock.BedrockRequest) (bool, []string, error) {
+func (ba *BedrockActivities) ValidateBedrockRequestActivity(ctx context.Context, request bedrock.BedrockRequest) (*types.ValidationResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Validating Bedrock request", "model", request.ModelID)
 
@@ -206,11 +207,14 @@ func (ba *BedrockActivities) ValidateBedrockRequestActivity(ctx context.Context,
 	}
 
 	logger.Info("Bedrock request validation completed", "valid", isValid, "errors", len(errors))
-	return isValid, errors, nil
+	return &types.ValidationResult{
+		IsValid: isValid,
+		Errors:  errors,
+	}, nil
 }
 
 // ValidateBedrockConversationActivity validates a Bedrock conversation request
-func (ba *BedrockActivities) ValidateBedrockConversationActivity(ctx context.Context, request bedrock.ConversationRequest) (bool, []string, error) {
+func (ba *BedrockActivities) ValidateBedrockConversationActivity(ctx context.Context, request bedrock.ConversationRequest) (*types.ValidationResult, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Validating Bedrock conversation request", "model", request.ModelID, "messages", len(request.Messages))
 
@@ -223,11 +227,14 @@ func (ba *BedrockActivities) ValidateBedrockConversationActivity(ctx context.Con
 	}
 
 	logger.Info("Bedrock conversation validation completed", "valid", isValid, "errors", len(errors))
-	return isValid, errors, nil
+	return &types.ValidationResult{
+		IsValid: isValid,
+		Errors:  errors,
+	}, nil
 }
 
-// CompareModelsActivity compares multiple Bedrock models
-func (ba *BedrockActivities) CompareModelsActivity(ctx context.Context, prompt string, modelIDs []string) (map[string]interface{}, error) {
+// CompareBedrockModelsActivity compares multiple Bedrock models
+func (ba *BedrockActivities) CompareBedrockModelsActivity(ctx context.Context, prompt string, modelIDs []string) (map[string]interface{}, error) {
 	logger := activity.GetLogger(ctx)
 	logger.Info("Comparing Bedrock models", "models", len(modelIDs), "promptLength", len(prompt))
 
